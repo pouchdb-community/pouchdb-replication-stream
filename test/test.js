@@ -6,8 +6,12 @@ var Pouch = require('pouchdb');
 //
 // your plugin goes here
 //
-var helloPlugin = require('../');
-Pouch.plugin(helloPlugin);
+var replicationStream = require('../');
+Pouch.plugin(replicationStream.plugin);
+Object.keys(replicationStream.adapters).forEach(function (adapterName) {
+  var adapter = replicationStream.adapters[adapterName];
+  Pouch.adapter(adapterName, adapter);
+});
 
 var chai = require('chai');
 chai.use(require("chai-as-promised"));
@@ -43,9 +47,11 @@ function tests(dbName, dbType) {
     return Pouch.destroy(dbName);
   });
   describe(dbType + ': hello test suite', function () {
-    it('should say hello', function () {
-      return db.sayHello().then(function (response) {
-        response.should.equal('hello');
+    it('should dump an empty database', function () {
+
+      return db.bulkDocs([{}, {}, {}]).then(function () {
+        var writeStream = require('fs').createWriteStream('/tmp/tmp.out');
+        return db.dump(writeStream);
       });
     });
   });

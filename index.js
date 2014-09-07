@@ -2,6 +2,7 @@
 
 var utils = require('./pouch-utils');
 var version = require('./version');
+var split = require('split');
 
 exports.adapters = {};
 //exports.adapters.readableStream = require('./readable-stream');
@@ -46,8 +47,34 @@ exports.plugin.dump = utils.toPromise(function (writableStream, opts, callback) 
   });
 });
 
-exports.plugin.load = utils.toPromise(function (callback) {
-  callback(null, 'hello');
+exports.plugin.load = utils.toPromise(function (readableStream, opts, callback) {
+  var self = this;
+  if (typeof opts === 'function') {
+    callback = opts;
+    opts = {};
+  }
+
+  var queue = utils.Promise.resolve();
+
+  readableStream.pipe(split()).on('data', function (line) {
+    if (!line) {
+      queue = queue.then(function () {
+        callback(null, {ok: true});
+      });
+      return;
+    }
+    var data = JSON.parse(line);
+    if (!data.docs) {
+      return;
+    }
+    queue = queue.then(function () {
+      return self.bulkDocs({docs: data.docs, new_edits: false});
+    });
+  }).on('error', function (err) {
+    queue = queue.then(function () {
+      callback(err);
+    });
+  });
 });
 
 /* istanbul ignore next */

@@ -4,6 +4,8 @@ var utils = require('./pouch-utils');
 var version = require('./version');
 var split = require('split');
 
+var DEFAULT_BATCH_SIZE = 1; // one doc per line
+
 exports.adapters = {};
 exports.adapters.writableStream = require('./writable-stream');
 
@@ -32,10 +34,9 @@ exports.plugin.dump = utils.toPromise(function (writableStream, opts, callback) 
     };
     writableStream.write(JSON.stringify(header) + '\n');
   }).then(function () {
-    var replicationOpts = {};
-    if ('batch_size' in opts) {
-      replicationOpts.batch_size = opts.batch_size;
-    }
+    var replicationOpts = {
+      batch_size: ('batch_size' in opts ? opts.batch_size: DEFAULT_BATCH_SIZE)
+    };
     return self.replicate.to(output, replicationOpts);
   }).then(function () {
     return output.close();

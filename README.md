@@ -44,6 +44,12 @@ db2.load(ws).then(function (res) {
 });
 ```
 
+Congratulations, your databases are now in sync. It's the same effect as if you had done:
+
+```js
+db1.replicate.to(db2);
+```
+
 Design
 ----
 

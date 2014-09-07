@@ -5,7 +5,6 @@ var version = require('./version');
 var split = require('split');
 
 exports.adapters = {};
-//exports.adapters.readableStream = require('./readable-stream');
 exports.adapters.writableStream = require('./writable-stream');
 
 exports.plugin = {};
@@ -80,6 +79,5 @@ exports.plugin.load = utils.toPromise(function (readableStream, opts, callback) 
 /* istanbul ignore next */
 if (typeof window !== 'undefined' && window.PouchDB) {
   window.PouchDB.plugin(exports.plugin);
-  //window.PouchDB.adapter('readableStream', exports.adapters.readableStream);
   window.PouchDB.adapter('writableStream', exports.adapters.writableStream);
 }

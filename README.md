@@ -87,7 +87,7 @@ var PouchDB = require('pouchdb');
 var replicationStream = require('pouchdb-replication-stream');
 
 PouchDB.plugin(replicationStream.plugin);
-PouchDB.adapter('writableStream', exports.adapters.writableStream);
+PouchDB.adapter('writableStream', replicationStream.adapters.writableStream);
 ```
 
 Building

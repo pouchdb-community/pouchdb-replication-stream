@@ -51,12 +51,12 @@ The replication stream looks like this:
 
 ```js
 {"version":"0.1.0","db_type":"leveldb","start_time":"2014-09-07T21:31:01.527Z","db_info":{"doc_count":3,"update_seq":3,"db_name":"testdb"}}
-{"docs":[{"_id":"doc1","_rev":"1-20624ff392c68c359adb98504a369769","foo": "bar"}]}
-{"docs":[{"_id":"doc2","_rev":"1-8b6f55822a3e3932ac1e9ddb8b0357cb","bar": "baz"}]}
-{"docs":[{"_id":"doc3","_rev":"1-2567345aa745c1d85602add2689dc398","baz": "quux"}]
+{"docs":[{"_id":"doc1","_rev":"1-20624ff392c68c359adb98504a369769","foo":"bar"}]}
+{"docs":[{"_id":"doc2","_rev":"1-8b6f55822a3e3932ac1e9ddb8b0357cb","bar":"baz"}]}
+{"docs":[{"_id":"doc3","_rev":"1-2567345aa745c1d85602add2689dc398","baz":"quux"}]
 ```
 
-I.e. it's just NDJ - Newline Delimited JSON. Each line is just the documents to be loaded into the target database (using `bulkDocs()` with `{new_edits: false}`).
+I.e. it's just NDJ - Newline Delimited JSON. Each line is a list of the documents to be loaded into the target database (using `bulkDocs()` with `{new_edits: false}`).
 
 The first line is a header containing some basic info, like the number of documents in the database and the replication stream protocol version. Such info many be useful for showing a progress bar during the `load()` process, or for handling later versions, in case this protocol changes.
 

@@ -9,8 +9,12 @@ exports.adapters.writableStream = require('./writable-stream');
 
 exports.plugin = {};
 
-exports.plugin.dump = utils.toPromise(function (writableStream, callback) {
+exports.plugin.dump = utils.toPromise(function (writableStream, opts, callback) {
   var self = this;
+  if (typeof opts === 'function') {
+    callback = opts;
+    opts = {};
+  }
 
   var PouchDB = self.constructor;
 
@@ -28,7 +32,11 @@ exports.plugin.dump = utils.toPromise(function (writableStream, callback) {
     };
     writableStream.write(JSON.stringify(header) + '\n');
   }).then(function () {
-    return self.replicate.to(output);
+    var replicationOpts = {};
+    if ('batch_size' in opts) {
+      replicationOpts.batch_size = opts.batch_size;
+    }
+    return self.replicate.to(output, replicationOpts);
   }).then(function () {
     return output.close();
   }).then(function () {

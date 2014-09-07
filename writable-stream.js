@@ -34,7 +34,7 @@ function WritableStreamPouch(opts, callback) {
     if (opts.new_edits === false) {
       // assume we're only getting this with new_edits=false,
       // since this adapter is just a replication target
-      stream.write(JSON.stringify(docs) + '\n');
+      stream.write(JSON.stringify({docs: docs}) + '\n');
       process.nextTick(function () {
         callback(null, docs.map(function (doc) {
           return {

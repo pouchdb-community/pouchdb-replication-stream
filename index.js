@@ -5,7 +5,7 @@ var version = require('./version');
 var split = require('split');
 var through = require('through2').obj;
 
-var DEFAULT_BATCH_SIZE = 1; // one doc per line
+var DEFAULT_BATCH_SIZE = 50;
 
 exports.adapters = {};
 exports.adapters.writableStream = require('./writable-stream');
@@ -54,6 +54,8 @@ exports.plugin.load = utils.toPromise(function (readableStream, opts, callback) 
     opts = {};
   }
 
+  var batchSize = 'batch_size' in opts ? opts.batch_size : DEFAULT_BATCH_SIZE;
+
   var queue = [];
   readableStream.pipe(split()).pipe(through(function (line, _, next) {
     if (!line) {
@@ -71,7 +73,7 @@ exports.plugin.load = utils.toPromise(function (readableStream, opts, callback) 
   }))
   .pipe(through(function (doc, _, next) {
     queue.push(doc);
-    if (queue.length > 50) {
+    if (queue.length >= batchSize) {
       this.push(queue);
       queue = [];
     }

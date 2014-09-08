@@ -14,6 +14,7 @@ exports.plugin = require('pouch-stream');
 
 exports.plugin.dump = utils.toPromise(function (writableStream, opts, callback) {
   var self = this;
+  /* istanbul ignore else */
   if (typeof opts === 'function') {
     callback = opts;
     opts = {};
@@ -26,7 +27,7 @@ exports.plugin.dump = utils.toPromise(function (writableStream, opts, callback) 
     adapter: 'writableStream'
   });
 
-  self.info().then(function (info) {
+  var chain = self.info().then(function (info) {
     var header = {
       version: version,
       db_type: self.type(),
@@ -35,25 +36,35 @@ exports.plugin.dump = utils.toPromise(function (writableStream, opts, callback) 
     };
     writableStream.write(JSON.stringify(header) + '\n');
     var replicationOpts = {
-      batch_size: ('batch_size' in opts ? opts.batch_size: DEFAULT_BATCH_SIZE)
+      batch_size: opts.batch_size || DEFAULT_BATCH_SIZE 
     };
     return self.replicate.to(output, replicationOpts);
   }).then(function () {
     return output.close();
   }).then(function () {
     callback(null, {ok: true});
-  }).catch(function (err) {
-    callback(err);
   });
+  /* istanbul ignore next */
+  function onErr(err) {
+    callback(err);
+  }
+  chain.catch(onErr);
 });
 
 exports.plugin.load = utils.toPromise(function (readableStream, opts, callback) {
+  /* istanbul ignore else */
   if (typeof opts === 'function') {
     callback = opts;
     opts = {};
   }
 
-  var batchSize = 'batch_size' in opts ? opts.batch_size : DEFAULT_BATCH_SIZE;
+  var batchSize;
+  /* istanbul ignore if */
+  if ('batch_size' in opts) {
+    batchSize = opts.batch_size;
+  } else {
+    batchSize = DEFAULT_BATCH_SIZE;
+  }
 
   var queue = [];
   readableStream.pipe(ldj.parse()).pipe(through(function (data, _, next) {

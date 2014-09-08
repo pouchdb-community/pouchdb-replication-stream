@@ -23,7 +23,7 @@ function WritableStreamPouch(opts, callback) {
   process.nextTick(function () {
     callback(null, api);
   });
-
+  /* istanbul ignore next */
   api.type = function () {
     return 'readable-stream';
   };
@@ -35,6 +35,7 @@ function WritableStreamPouch(opts, callback) {
   api._bulkDocs = function (req, opts, callback) {
     var docs = req.docs;
     var self = this;
+    /* istanbul ignore else */
     if (opts.new_edits === false) {
       // assume we're only getting this with new_edits=false,
       // since this adapter is just a replication target
@@ -72,6 +73,7 @@ function WritableStreamPouch(opts, callback) {
     var self = this;
     process.nextTick(function () {
       var existingDoc = self.localStore[id];
+      /* istanbul ignore else */
       if (existingDoc) {
         callback(null, existingDoc);
       } else {
@@ -82,6 +84,7 @@ function WritableStreamPouch(opts, callback) {
 
   api._putLocal = function (doc, opts, callback) {
     var self = this;
+    /* istanbul ignore else */
     if (typeof opts === 'function') {
       callback = opts;
       opts = {};
@@ -98,6 +101,7 @@ function WritableStreamPouch(opts, callback) {
 
     process.nextTick(function () {
       var existingDoc = self.localStore[id];
+      /* istanbul ignore if */
       if (existingDoc && oldRev !== existingDoc._rev) {
         callback(ERROR_REV_CONFLICT);
       } else {
@@ -106,7 +110,7 @@ function WritableStreamPouch(opts, callback) {
       }
     });
   };
-
+  /* istanbul ignore next */
   api._removeLocal = function (doc, callback) {
     var self = this;
     process.nextTick(function () {
@@ -124,7 +128,7 @@ function WritableStreamPouch(opts, callback) {
 WritableStreamPouch.valid = function () {
   return true;
 };
-
+/* istanbul ignore next */
 WritableStreamPouch.destroy = utils.toPromise(function (name, opts, callback) {
   WritableStreamPouch.Changes.removeAllListeners(name);
   process.nextTick(function () {

@@ -38,7 +38,9 @@
     "inherits": "~2.0.1",
     "lie": "^2.6.0",
     "pouchdb-extend": "^0.1.2",
-    "split": "^0.3.0"
+    "split": "^0.3.0",
+    "through2": "^0.6.1",
+    "pouch-stream": "^0.4.0"
   },
   "devDependencies": {
     "bluebird": "^1.0.7",

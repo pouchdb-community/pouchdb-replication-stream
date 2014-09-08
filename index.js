@@ -3,6 +3,7 @@
 var utils = require('./pouch-utils');
 var version = require('./version');
 var split = require('split');
+var through = require('through2').obj;
 
 var DEFAULT_BATCH_SIZE = 1; // one doc per line
 
@@ -48,32 +49,43 @@ exports.plugin.dump = utils.toPromise(function (writableStream, opts, callback) 
 });
 
 exports.plugin.load = utils.toPromise(function (readableStream, opts, callback) {
-  var self = this;
   if (typeof opts === 'function') {
     callback = opts;
     opts = {};
   }
 
-  var queue = utils.Promise.resolve();
-
-  readableStream.pipe(split()).on('data', function (line) {
+  var queue = [];
+  readableStream.pipe(split()).pipe(through(function (line, _, next) {
     if (!line) {
-      queue = queue.then(function () {
-        callback(null, {ok: true});
-      });
-      return;
+      return next();
     }
     var data = JSON.parse(line);
     if (!data.docs) {
-      return;
+      return next();
     }
-    queue = queue.then(function () {
-      return self.bulkDocs({docs: data.docs, new_edits: false});
-    });
-  }).on('error', function (err) {
-    queue = queue.then(function () {
-      callback(err);
-    });
+    // lets smooth it out
+    data.docs.forEach(function (doc) {
+      this.push(doc);
+    }, this);
+    next();
+  }))
+  .pipe(through(function (doc, _, next) {
+    queue.push(doc);
+    if (queue.length > 50) {
+      this.push(queue);
+      queue = [];
+    }
+    next();
+  }, function (next) {
+    if (queue.length) {
+      this.push(queue);
+    }
+    next();
+  }))
+  .pipe(this.createWriteStream({newEdits: false}))
+  .on('error', callback)
+  .on('finish', function () {
+    callback();
   });
 });
 
@@ -81,4 +93,5 @@ exports.plugin.load = utils.toPromise(function (readableStream, opts, callback) 
 if (typeof window !== 'undefined' && window.PouchDB) {
   window.PouchDB.plugin(exports.plugin);
   window.PouchDB.adapter('writableStream', exports.adapters.writableStream);
+  window.PouchDB.plugin(require('pouch-stream'));
 }

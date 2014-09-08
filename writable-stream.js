@@ -38,8 +38,7 @@ function WritableStreamPouch(opts, callback) {
     if (opts.new_edits === false) {
       // assume we're only getting this with new_edits=false,
       // since this adapter is just a replication target
-      this.ldj.write(docs);
-      process.nextTick(function () {
+      this.ldj.write({docs: docs}, function () {
         callback(null, docs.map(function (doc) {
           return {
             ok: true,
@@ -66,7 +65,7 @@ function WritableStreamPouch(opts, callback) {
   };
 
   api._close = function (callback) {
-    this.ldj.write(null, callback);
+    this.ldj.end(callback);
   };
 
   api._getLocal = function (id, callback) {

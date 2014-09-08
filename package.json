@@ -22,7 +22,7 @@
     "url": "https://github.com/nolanlawson/pouchdb-replication-stream/issues"
   },
   "scripts": {
-    "test-node": "TEST_DB=testdb,http://localhost:5984/testdb istanbul test ./node_modules/mocha/bin/_mocha test/test.js",
+    "test-node": "TEST_DB=testdb,http://localhost:5984/testdb istanbul test ./node_modules/mocha/bin/_mocha test/test.js -- -R spec",
     "test-browser": "./bin/test-browser.js",
     "jshint": "jshint -c .jshintrc *.js test/test.js",
     "test": "npm run jshint && ./bin/run-test.sh",
@@ -57,7 +57,9 @@
     "sauce-connect-launcher": "^0.4.2",
     "uglify-js": "^2.4.13",
     "watchify": "~0.4.1",
-    "wd": "^0.2.21"
+    "wd": "^0.2.21",
+    "noms": "0.0.0",
+    "random-document-stream": "0.0.0"
   },
   "browser": {
     "crypto": false

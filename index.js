@@ -34,7 +34,6 @@ exports.plugin.dump = utils.toPromise(function (writableStream, opts, callback) 
       db_info: info
     };
     writableStream.write(JSON.stringify(header) + '\n');
-  }).then(function () {
     var replicationOpts = {
       batch_size: ('batch_size' in opts ? opts.batch_size: DEFAULT_BATCH_SIZE)
     };

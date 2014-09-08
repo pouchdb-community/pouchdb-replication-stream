@@ -2,7 +2,7 @@
 
 var utils = require('./pouch-utils');
 var version = require('./version');
-var split = require('split');
+var ldj = require('ldjson-stream');
 var through = require('through2').obj;
 
 var DEFAULT_BATCH_SIZE = 50;
@@ -10,7 +10,7 @@ var DEFAULT_BATCH_SIZE = 50;
 exports.adapters = {};
 exports.adapters.writableStream = require('./writable-stream');
 
-exports.plugin = {};
+exports.plugin = require('pouch-stream');
 
 exports.plugin.dump = utils.toPromise(function (writableStream, opts, callback) {
   var self = this;
@@ -57,11 +57,7 @@ exports.plugin.load = utils.toPromise(function (readableStream, opts, callback) 
   var batchSize = 'batch_size' in opts ? opts.batch_size : DEFAULT_BATCH_SIZE;
 
   var queue = [];
-  readableStream.pipe(split()).pipe(through(function (line, _, next) {
-    if (!line) {
-      return next();
-    }
-    var data = JSON.parse(line);
+  readableStream.pipe(ldj.parse()).pipe(through(function (data, _, next) {
     if (!data.docs) {
       return next();
     }
@@ -95,5 +91,4 @@ exports.plugin.load = utils.toPromise(function (readableStream, opts, callback) 
 if (typeof window !== 'undefined' && window.PouchDB) {
   window.PouchDB.plugin(exports.plugin);
   window.PouchDB.adapter('writableStream', exports.adapters.writableStream);
-  window.PouchDB.plugin(require('pouch-stream'));
 }

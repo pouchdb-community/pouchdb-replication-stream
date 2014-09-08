@@ -17,12 +17,11 @@ Object.keys(replicationStream.adapters).forEach(function (adapterName) {
 
 var chai = require('chai');
 chai.use(require("chai-as-promised"));
-
+var through = require('through2').obj;
 //
 // more variables you might want
 //
 chai.should(); // var should = chai.should();
-var Promise = require('bluebird'); // var Promise = require('bluebird');
 
 var dbs;
 if (process.browser) {
@@ -60,21 +59,15 @@ function tests(dbName, dbType) {
 
     it('should dump and load a basic db', function () {
 
-      // TODO: don't use fs
-      var fs = require('fs');
-      var file = '/tmp/pouchdb-' + dbType + '-tmp.txt';
-      function deleteFile() {
-        return Promise.promisify(fs.unlink)(file).catch(function () {});
-      }
+      var out = [];
 
-      return deleteFile().then(function () {
-        return db.bulkDocs([{}, {}, {}]);
-      }).then(function () {
-        var writeStream = fs.createWriteStream(file);
-        return db.dump(writeStream);
-      }).then(function () {
-        var readStream = fs.createReadStream(file);
-        return remote.load(readStream);
+      var stream = through(function (chunk, _, next) {
+        out.push(chunk);
+        next(null, chunk);
+      });
+      db.dump(stream).then(function () {
+        out.should.have.length(3, '3 docs dumped');
+        return remote.load(stream);
       }).then(function () {
         return remote.allDocs();
       }).then(function (res) {

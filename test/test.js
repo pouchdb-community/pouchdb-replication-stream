@@ -14,15 +14,16 @@ Object.keys(replicationStream.adapters).forEach(function (adapterName) {
   var adapter = replicationStream.adapters[adapterName];
   Pouch.adapter(adapterName, adapter);
 });
+var random = require('random-document-stream');
 
+var noms = require('noms');
 var chai = require('chai');
 chai.use(require("chai-as-promised"));
-
+var through = require('through2').obj;
 //
 // more variables you might want
 //
 chai.should(); // var should = chai.should();
-var Promise = require('bluebird'); // var Promise = require('bluebird');
 
 var dbs;
 if (process.browser) {
@@ -31,7 +32,7 @@ if (process.browser) {
 } else {
   dbs = process.env.TEST_DB;
 }
-
+var origN = 180;
 dbs.split(',').forEach(function (db) {
   var dbType = /^http/.test(db) ? 'http' : 'local';
   tests(db, dbType);
@@ -55,31 +56,44 @@ function tests(dbName, dbType) {
       return remote.destroy();
     });
   });
-
   describe(dbType + ': hello test suite', function () {
-
-    it('should dump and load a basic db', function () {
-
-      // TODO: don't use fs
-      var fs = require('fs');
-      var file = '/tmp/pouchdb-' + dbType + '-tmp.txt';
-      function deleteFile() {
-        return Promise.promisify(fs.unlink)(file).catch(function () {});
-      }
-
-      return deleteFile().then(function () {
-        return db.bulkDocs([{}, {}, {}]);
-      }).then(function () {
-        var writeStream = fs.createWriteStream(file);
-        return db.dump(writeStream);
-      }).then(function () {
-        var readStream = fs.createReadStream(file);
-        return remote.load(readStream);
-      }).then(function () {
+    origN += 20;
+    var n = origN;
+    var out = [];
+   
+    var stream = through(function (chunk, _, next) {
+      out.push(chunk);
+      next();
+    });
+    var outStream = noms(function (next) {
+      out.forEach(function (item) {
+        this.push(item);
+      }, this);
+      next(null, null);
+    });
+    it('should dump a basic db', function (done) {
+      random(n).pipe(db.createWriteStream()).on('finish', function () {
+        db.dump(stream).then(function () {
+          out.map(function (item, i) {
+            if (!i) {
+              return 1;
+            }
+            var out = JSON.parse(item);
+            return out.docs.length;
+          }).reduce(function (a, b) {
+            return a + b;
+          }).should.equal(n + 1, n + ' docs dumped plus meta data');
+          done();
+        }).catch(done);
+      });
+    });
+    it('should load a basic db', function (done) {
+      return remote.load(outStream).then(function () {
         return remote.allDocs();
       }).then(function (res) {
-        res.rows.should.have.length(3, '3 docs replicated');
-      });
+        res.rows.should.have.length(n, n + ' docs replicated');
+        done();
+      }).catch(done);
     });
   });
 

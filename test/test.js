@@ -79,6 +79,9 @@ function tests(dbName, dbType) {
               return 1;
             }
             var out = JSON.parse(item);
+            if (!out.docs) {
+              return 0;
+            }
             return out.docs.length;
           }).reduce(function (a, b) {
             return a + b;

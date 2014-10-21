@@ -37,9 +37,9 @@ db1.dump(ws).then(function (res) {
 Now let's read that file into another database using `load()`:
 
 ```js
-var rs = createReadStream('output.txt');
+var rs = fs.createReadStream('output.txt');
 
-db2.load(ws).then(function (res) {
+db2.load(rs).then(function (res) {
   // res should be {ok: true}
 });
 ```

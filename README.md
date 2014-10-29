@@ -14,6 +14,13 @@ This has many uses:
 3. Replicate over web sockets? Over bluetooth? Over NFC? Why not? Since the replication stream is just JSON plaintext, you can send it over any transport mechanism.
 4. Periodically backup your database.
 
+Suite of Tools
+---------
+
+More to come.
+
+* [pouchdb-dump-cli](https://github.com/nolanlawson/pouchdb-dump-cli)
+
 Usage
 -------
 

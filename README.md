@@ -20,6 +20,7 @@ Suite of Tools
 More to come.
 
 * [pouchdb-dump-cli](https://github.com/nolanlawson/pouchdb-dump-cli)
+* [pouchdb-load](https://github.com/nolanlawson/pouchdb-load)
 
 Usage
 -------

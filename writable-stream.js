@@ -106,7 +106,15 @@ function WritableStreamPouch(opts, callback) {
         callback(ERROR_REV_CONFLICT);
       } else {
         self.localStore[id] = doc;
-        callback(null, {ok: true, id: id, rev: newRev});
+        var done = function () {
+          callback(null, {ok: true, id: id, rev: newRev});
+        };
+        /* istanbul ignore else */
+        if ('last_seq' in doc) {
+          self.ldj.write({seq: doc.last_seq}, done);
+        } else {
+          done();
+        }
       }
     });
   };

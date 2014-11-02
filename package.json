@@ -1,6 +1,6 @@
 {
   "name": "pouchdb-replication-stream",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "PouchDB/CouchDB replication as a stream",
   "main": "index.js",
   "repository": {
@@ -64,7 +64,6 @@
     "crypto": false
   },
   "browserify": {
-    "transform": [
-    ]
+    "transform": []
   }
 }

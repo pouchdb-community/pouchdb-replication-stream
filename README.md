@@ -68,6 +68,7 @@ The replication stream looks like this:
 {"docs":[{"_id":"doc1","_rev":"1-20624ff392c68c359adb98504a369769","foo":"bar"}]}
 {"docs":[{"_id":"doc2","_rev":"1-8b6f55822a3e3932ac1e9ddb8b0357cb","bar":"baz"}]}
 {"docs":[{"_id":"doc3","_rev":"1-2567345aa745c1d85602add2689dc398","baz":"quux"}]
+{"seq":3}
 ```
 
 I.e. it's just NDJ - Newline Delimited JSON. Each line is a list of the documents to be loaded into the target database (using `bulkDocs()` with `{new_edits: false}`).
@@ -77,6 +78,8 @@ The first line is a header containing some basic info, like the number of docume
 This replication stream is _idempotent_, meaning you can load it into a target database any number of times, and it will be as if you had only done it once.
 
 At the end of the `load()` process, the target database will function exactly as if it had been replicated from the source database. Revision hashes, conflicts, attachments, and document contents are all faithfully transported.
+
+Some lines may contain `seq`s; these are used as checkpoints. The `seq` line says, "When you have loaded all the preceding documents, you are now at update_seq `seq`."
 
 Installation
 --------

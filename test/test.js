@@ -20,10 +20,9 @@ var noms = require('noms');
 var chai = require('chai');
 chai.use(require("chai-as-promised"));
 var through = require('through2').obj;
-//
-// more variables you might want
-//
-chai.should(); // var should = chai.should();
+chai.should();
+var Promise = require('bluebird');
+var MemoryStream = require('memorystream');
 
 var dbs;
 if (process.browser) {
@@ -72,7 +71,7 @@ function tests(dbName, dbType) {
     });
   });
 
-  describe(dbType + ': hello test suite', function () {
+  describe(dbType + ': test suite', function () {
     this.timeout(30000);
 
     it('should dump and load a basic db', function (done) {
@@ -137,6 +136,47 @@ function tests(dbName, dbType) {
           done();
         }).catch(done);
       });
+    });
+
+    it('should replicate same _revs into the dest db', function () {
+
+      var db1 = db;
+      var db2 = new Pouch('mydb2');
+
+      var testdoc1_revs = [];
+      var testdoc2_revs = [];
+
+      var stream = new MemoryStream();
+
+      function finallyFun() {
+        return db2.destroy();
+      }
+
+      return db1.bulkDocs([
+        {_id: 'testdoc1'},
+        {_id: 'testdoc2'}
+      ]).then(function () {
+        return Promise.all([
+          db1.dump(stream),
+          db2.load(stream)
+        ]);
+      }).then(function () {
+        return Promise.props([
+          db1.allDocs(),
+          db2.allDocs()
+        ]);
+      }).then(function (docs) {
+        testdoc1_revs.push(docs.db1.rows[0].value.rev);
+        testdoc1_revs.push(docs.db2.rows[0].value.rev);
+        testdoc2_revs.push(docs.db1.rows[1].value.rev);
+        testdoc2_revs.push(docs.db2.rows[1].value.rev);
+        return Promise.all([db1.destroy(), db2.destroy()]);
+      }).then(function () {
+        console.log('testdoc1: ' + testdoc1_revs[0] + ', ' + testdoc1_revs[1]);
+        console.log('testdoc2: ' + testdoc2_revs[0] + ', ' + testdoc2_revs[1]);
+        testdoc1_revs[0].should.equal(testdoc1_revs[1]);
+        testdoc2_revs[0].should.equal(testdoc2_revs[1]);
+      }).then(finallyFun, finallyFun);
     });
   });
 

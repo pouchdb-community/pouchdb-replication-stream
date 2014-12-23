@@ -46,6 +46,7 @@
     "browserify": "~2.36.0",
     "chai": "~1.8.1",
     "chai-as-promised": "~4.1.0",
+    "chance": "^0.7.0",
     "http-server": "~0.5.5",
     "istanbul": "^0.2.7",
     "jshint": "~2.3.0",

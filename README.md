@@ -58,6 +58,29 @@ Congratulations, your databases are now in sync. It's the same effect as if you 
 db1.replicate.to(db2);
 ```
 
+### Stream directly without the dump file
+
+```js
+var Promise = require('bluebird');
+var PouchDB = require('pouchdb');
+var replicationStream = require('pouchdb-replication-stream');
+var MemoryStream = require('memorystream');
+
+PouchDB.plugin(replicationStream.plugin);
+PouchDB.adapter('writableStream', replicationStream.adapters.writableStream);
+var stream = new MemoryStream();
+
+var source = new PouchDB('http://localhost:5984/source_db');
+var dest = new PouchDB('local_destination');
+
+Promise.all([
+  source.dump(stream),
+  dest.load(stream)
+]).then(function () {
+  console.log('Hooray the stream replication is complete!');
+});
+```
+
 Design
 ----
 

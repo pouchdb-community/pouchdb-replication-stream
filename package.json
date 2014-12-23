@@ -49,16 +49,17 @@
     "http-server": "~0.5.5",
     "istanbul": "^0.2.7",
     "jshint": "~2.3.0",
+    "minimist": "^1.1.0",
     "mocha": "~1.18",
+    "noms": "0.0.0",
     "phantomjs": "^1.9.7-5",
     "pouchdb": "pouchdb/pouchdb",
+    "random-document-stream": "0.0.0",
     "request": "^2.36.0",
     "sauce-connect-launcher": "^0.4.2",
     "uglify-js": "^2.4.13",
     "watchify": "~0.4.1",
-    "wd": "^0.2.21",
-    "noms": "0.0.0",
-    "random-document-stream": "0.0.0"
+    "wd": "^0.2.21"
   },
   "browser": {
     "crypto": false

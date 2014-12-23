@@ -90,10 +90,10 @@ exports.plugin.load = utils.toPromise(function (readableStream, opts, callback) 
     }
     next();
   }))
-  .pipe(this.createWriteStream({newEdits: false}))
+  .pipe(this.createWriteStream({new_edits: false}))
   .on('error', callback)
   .on('finish', function () {
-    callback();
+    callback(null, {ok: true});
   });
 });
 

@@ -1,6 +1,6 @@
 var Promise = require('bluebird');
 var PouchDB = require('pouchdb');
-var replicationStream = require('pouchdb-replication-stream');
+var replicationStream = require('./index');
 var MemoryStream = require('memorystream');
 var Chance = require('chance');
 

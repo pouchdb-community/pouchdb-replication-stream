@@ -86,7 +86,7 @@ Installation
 
 To use this plugin, include it after `pouchdb.js` in your HTML page:
 
-**Warning:**: doesn't work in the browser yet due to browserify/esprima errors. It's [an open issue](https://github.com/nolanlawson/pouchdb-replication-stream/issues/8), help wanted.
+**Warning:** doesn't work in the browser yet due to browserify/esprima errors. It's [an open issue](https://github.com/nolanlawson/pouchdb-replication-stream/issues/8), help wanted.
 
 ```html
 <script src="pouchdb.js"></script>

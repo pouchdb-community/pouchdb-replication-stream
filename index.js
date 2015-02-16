@@ -4,8 +4,20 @@ var utils = require('./pouch-utils');
 var version = require('./version');
 var ldj = require('ldjson-stream');
 var through = require('through2').obj;
+var pick = require('lodash/object/pick');
 
 var DEFAULT_BATCH_SIZE = 50;
+
+// params to the replicate() API that the user is allowed to specify
+var ALLOWED_PARAMS = [
+  'batch_size',
+  'batches_limit',
+  'filter',
+  'doc_ids',
+  'query_params',
+  'since',
+  'view'
+];
 
 exports.adapters = {};
 exports.adapters.writableStream = require('./writable-stream');
@@ -35,7 +47,8 @@ exports.plugin.dump = utils.toPromise(function (writableStream, opts, callback) 
       db_info: info
     };
     writableStream.write(JSON.stringify(header) + '\n');
-    if(!opts.batch_size){
+    opts = pick(opts, ALLOWED_PARAMS);
+    if (!opts.batch_size) {
       opts.batch_size = DEFAULT_BATCH_SIZE;
     }
     return self.replicate.to(output, opts);

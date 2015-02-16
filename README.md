@@ -58,6 +58,28 @@ Congratulations, your databases are now in sync. It's the same effect as if you 
 db1.replicate.to(db2);
 ```
 
+API
+-----
+
+### db.dump(stream [, opts])
+
+Dump the `db` to a `stream` with the given `opts`. Returns a Promise.
+
+The `opts` are passed directly to the `replicate()` API [as described here](http://pouchdb.com/api.html#replication). In particular you may want to set:
+
+* `batch_size` - how many documents to dump in each output chunk. Defaults to 50.
+* `since` - the `seq` from which to start reading changes.
+
+The options you are allowed to pass through are: `batch_size`, `batches_limit`, `filter`, `doc_ids`, `query_params`, `since`, and `view`.
+
+### db.load(stream)
+
+Load changes from the given `stream` into the `db`. Returns a Promise.
+
+This is an idempotent operation, so you can call it multiple times and it won't change the result.
+
+**Note:** Yes, there is a [pouchdb-load](https://github.com/nolanlawson/pouchdb-load) plugin that also has a `db.load()` API. It's not the same as this one, because I didn't expect anyone to try to use both plugins at the same time. If you are trying to do that, then [read this](https://github.com/nolanlawson/pouchdb-load/pull/7#issuecomment-67713908).
+
 Design
 ----
 

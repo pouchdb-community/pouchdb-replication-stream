@@ -166,6 +166,49 @@ function tests(dbName, dbType) {
         testdoc2_revs[0].should.equal(testdoc2_revs[1]);
       });
     });
+
+    it('should replicate using since/batch_size 1', function () {
+      var stream = new MemoryStream();
+
+      return db.put({_id: 'testdoc1'}).then(function () {
+        return db.put({_id: 'testdoc2'});
+      }).then(function () {
+        return Promise.all([
+          db.dump(stream, {
+            since: 1,
+            batch_size: 1
+          }),
+          remote.load(stream)
+        ]);
+      }).then(function () {
+        return remote.allDocs();
+      }).then(function (docs) {
+        docs.rows.should.have.length(1);
+        docs.rows[0].id.should.equal('testdoc2');
+      });
+    });
+
+    it('should replicate using since/batch_size 2', function () {
+      var stream = new MemoryStream();
+
+      return db.put({_id: 'testdoc1'}).then(function () {
+        return db.put({_id: 'testdoc2'});
+      }).then(function () {
+        return Promise.all([
+          db.dump(stream, {
+            since: 1,
+            batch_size: 100
+          }),
+          remote.load(stream)
+        ]);
+      }).then(function () {
+        return remote.allDocs();
+      }).then(function (docs) {
+        docs.rows.should.have.length(1);
+        docs.rows[0].id.should.equal('testdoc2');
+      });
+    });
+
   });
 
 }

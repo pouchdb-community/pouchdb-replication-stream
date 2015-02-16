@@ -20,10 +20,9 @@ var noms = require('noms');
 var chai = require('chai');
 chai.use(require("chai-as-promised"));
 var through = require('through2').obj;
-//
-// more variables you might want
-//
-chai.should(); // var should = chai.should();
+chai.should();
+var Promise = require('bluebird');
+var MemoryStream = require('memorystream');
 
 var dbs;
 if (process.browser) {
@@ -72,7 +71,7 @@ function tests(dbName, dbType) {
     });
   });
 
-  describe(dbType + ': hello test suite', function () {
+  describe(dbType + ': test suite', function () {
     this.timeout(30000);
 
     it('should dump and load a basic db', function (done) {
@@ -136,6 +135,35 @@ function tests(dbName, dbType) {
           lastSeq.should.equal(180);
           done();
         }).catch(done);
+      });
+    });
+
+    it('should replicate same _revs into the dest db', function () {
+
+      var stream = new MemoryStream();
+
+      return db.bulkDocs([
+        {_id: 'testdoc1'},
+        {_id: 'testdoc2'}
+      ]).then(function () {
+        return Promise.all([
+          db.dump(stream),
+          remote.load(stream)
+        ]);
+      }).then(function () {
+        return Promise.all([
+          db.allDocs(),
+          remote.allDocs()
+        ]);
+      }).then(function (docs) {
+        var testdoc1_revs = [];
+        var testdoc2_revs = [];
+        testdoc1_revs.push(docs[0].rows[0].value.rev);
+        testdoc1_revs.push(docs[1].rows[0].value.rev);
+        testdoc2_revs.push(docs[0].rows[1].value.rev);
+        testdoc2_revs.push(docs[1].rows[1].value.rev);
+        testdoc1_revs[0].should.equal(testdoc1_revs[1]);
+        testdoc2_revs[0].should.equal(testdoc2_revs[1]);
       });
     });
   });

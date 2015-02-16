@@ -1,6 +1,6 @@
 {
   "name": "pouchdb-replication-stream",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "PouchDB/CouchDB replication as a stream",
   "main": "index.js",
   "repository": {
@@ -35,14 +35,15 @@
   "dependencies": {
     "argsarray": "0.0.1",
     "inherits": "~2.0.1",
+    "ldjson-stream": "^1.2.1",
     "lie": "^2.6.0",
-    "pouchdb-extend": "^0.1.2",
-    "through2": "^0.6.1",
     "pouch-stream": "^0.4.0",
-    "ldjson-stream": "^1.2.1"
+    "pouchdb-extend": "^0.1.2",
+    "through2": "^0.6.1"
   },
   "devDependencies": {
     "bluebird": "^1.0.7",
+    "memorystream": "^0.2.0",
     "browserify": "~2.36.0",
     "chai": "~1.8.1",
     "chai-as-promised": "~4.1.0",

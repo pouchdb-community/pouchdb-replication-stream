@@ -50,7 +50,7 @@
     "http-server": "~0.5.5",
     "istanbul": "^0.2.7",
     "jshint": "~2.3.0",
-    "memorystream": "^0.2.0",
+    "memorystream": "^0.3.0",
     "mocha": "~1.18",
     "noms": "0.0.0",
     "phantomjs": "^1.9.7-5",

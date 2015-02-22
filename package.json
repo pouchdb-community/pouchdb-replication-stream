@@ -37,6 +37,7 @@
     "inherits": "~2.0.1",
     "ldjson-stream": "^1.2.1",
     "lie": "^2.6.0",
+    "lodash": "^3.3.0",
     "pouch-stream": "^0.4.0",
     "pouchdb-extend": "^0.1.2",
     "through2": "^0.6.1"
@@ -49,7 +50,6 @@
     "http-server": "~0.5.5",
     "istanbul": "^0.2.7",
     "jshint": "~2.3.0",
-    "lodash": "^3.3.0",
     "memorystream": "^0.2.0",
     "mocha": "~1.18",
     "noms": "0.0.0",

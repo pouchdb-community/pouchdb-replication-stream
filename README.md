@@ -106,20 +106,20 @@ Some lines may contain `seq`s; these are used as checkpoints. The `seq` line say
 Installation
 --------
 
-To use this plugin, include it after `pouchdb.js` in your HTML page:
-
-**Warning:** doesn't work in the browser yet due to browserify/esprima errors. It's [an open issue](https://github.com/nolanlawson/pouchdb-replication-stream/issues/8), help wanted.
+To use this plugin, download it from the `dist` folder and include it after `pouchdb.js` in your HTML page:
 
 ```html
 <script src="pouchdb.js"></script>
 <script src="pouchdb.replication-stream.js"></script>
 ```
 
+You can also use Bower:
+
+    bower install pouchdb-replication-stream
+
 Or to use it in Node.js, just npm install it:
 
-```
-npm install pouchdb-replication-stream
-```
+    npm install pouchdb-replication-stream
 
 And then attach it to the `PouchDB` object using the following code:
 

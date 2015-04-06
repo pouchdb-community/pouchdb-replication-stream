@@ -117,7 +117,7 @@ if (typeof window !== 'undefined' && window.PouchDB) {
   window.PouchDB.adapter('writableStream', exports.adapters.writableStream);
 }
 
-},{"./pouch-utils":88,"./version":89,"./writable-stream":90,"ldjson-stream":22,"lodash/object/pick":58,"pouch-stream":63,"through2":86}],2:[function(require,module,exports){
+},{"./pouch-utils":89,"./version":90,"./writable-stream":91,"ldjson-stream":22,"lodash/object/pick":60,"pouch-stream":65,"through2":87}],2:[function(require,module,exports){
 
 
 //
@@ -7416,7 +7416,7 @@ function serialize() {
   })
 }
 
-},{"os":17,"split2":23,"through2":86}],23:[function(require,module,exports){
+},{"os":17,"split2":23,"through2":87}],23:[function(require,module,exports){
 /*
 Copyright (c) 2014, Matteo Collina <hello@matteocollina.com>
 
@@ -7501,7 +7501,7 @@ function split(matcher, mapper, options) {
 
 module.exports = split
 
-},{"through2":86}],24:[function(require,module,exports){
+},{"through2":87}],24:[function(require,module,exports){
 'use strict';
 
 module.exports = INTERNAL;
@@ -7619,7 +7619,7 @@ function Promise(resolver) {
     return new Promise(resolver);
   }
   if (typeof resolver !== 'function') {
-    throw new TypeError('reslover must be a function');
+    throw new TypeError('resolver must be a function');
   }
   this.state = states.PENDING;
   this.queue = [];
@@ -7965,6 +7965,66 @@ exports.install = function (t) {
   };
 };
 },{}],42:[function(require,module,exports){
+/** Used as the `TypeError` message for "Functions" methods. */
+var FUNC_ERROR_TEXT = 'Expected a function';
+
+/* Native method references for those with the same name as other `lodash` methods. */
+var nativeMax = Math.max;
+
+/**
+ * Creates a function that invokes `func` with the `this` binding of the
+ * created function and arguments from `start` and beyond provided as an array.
+ *
+ * **Note:** This method is based on the [rest parameter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/rest_parameters).
+ *
+ * @static
+ * @memberOf _
+ * @category Function
+ * @param {Function} func The function to apply a rest parameter to.
+ * @param {number} [start=func.length-1] The start position of the rest parameter.
+ * @returns {Function} Returns the new function.
+ * @example
+ *
+ * var say = _.restParam(function(what, names) {
+ *   return what + ' ' + _.initial(names).join(', ') +
+ *     (_.size(names) > 1 ? ', & ' : '') + _.last(names);
+ * });
+ *
+ * say('hello', 'fred', 'barney', 'pebbles');
+ * // => 'hello fred, barney, & pebbles'
+ */
+function restParam(func, start) {
+  if (typeof func != 'function') {
+    throw new TypeError(FUNC_ERROR_TEXT);
+  }
+  start = nativeMax(typeof start == 'undefined' ? (func.length - 1) : (+start || 0), 0);
+  return function() {
+    var args = arguments,
+        index = -1,
+        length = nativeMax(args.length - start, 0),
+        rest = Array(length);
+
+    while (++index < length) {
+      rest[index] = args[start + index];
+    }
+    switch (start) {
+      case 0: return func.call(this, rest);
+      case 1: return func.call(this, args[0], rest);
+      case 2: return func.call(this, args[0], args[1], rest);
+    }
+    var otherArgs = Array(start + 1);
+    index = -1;
+    while (++index < start) {
+      otherArgs[index] = args[index];
+    }
+    otherArgs[start] = rest;
+    return func.apply(this, otherArgs);
+  };
+}
+
+module.exports = restParam;
+
+},{}],43:[function(require,module,exports){
 var isArguments = require('../lang/isArguments'),
     isArray = require('../lang/isArray'),
     isLength = require('./isLength'),
@@ -7976,13 +8036,12 @@ var isArguments = require('../lang/isArguments'),
  *
  * @private
  * @param {Array} array The array to flatten.
- * @param {boolean} [isDeep] Specify a deep flatten.
- * @param {boolean} [isStrict] Restrict flattening to arrays and `arguments` objects.
- * @param {number} [fromIndex=0] The index to start from.
+ * @param {boolean} isDeep Specify a deep flatten.
+ * @param {boolean} isStrict Restrict flattening to arrays and `arguments` objects.
  * @returns {Array} Returns the new flattened array.
  */
-function baseFlatten(array, isDeep, isStrict, fromIndex) {
-  var index = (fromIndex || 0) - 1,
+function baseFlatten(array, isDeep, isStrict) {
+  var index = -1,
       length = array.length,
       resIndex = -1,
       result = [];
@@ -8011,8 +8070,8 @@ function baseFlatten(array, isDeep, isStrict, fromIndex) {
 
 module.exports = baseFlatten;
 
-},{"../lang/isArguments":53,"../lang/isArray":54,"./isLength":48,"./isObjectLike":49}],43:[function(require,module,exports){
-var toObject = require('./toObject');
+},{"../lang/isArguments":55,"../lang/isArray":56,"./isLength":50,"./isObjectLike":51}],44:[function(require,module,exports){
+var createBaseFor = require('./createBaseFor');
 
 /**
  * The base implementation of `baseForIn` and `baseForOwn` which iterates
@@ -8026,24 +8085,11 @@ var toObject = require('./toObject');
  * @param {Function} keysFunc The function to get the keys of `object`.
  * @returns {Object} Returns `object`.
  */
-function baseFor(object, iteratee, keysFunc) {
-  var index = -1,
-      iterable = toObject(object),
-      props = keysFunc(object),
-      length = props.length;
-
-  while (++index < length) {
-    var key = props[index];
-    if (iteratee(iterable[key], key, iterable) === false) {
-      break;
-    }
-  }
-  return object;
-}
+var baseFor = createBaseFor();
 
 module.exports = baseFor;
 
-},{"./toObject":52}],44:[function(require,module,exports){
+},{"./createBaseFor":48}],45:[function(require,module,exports){
 var baseFor = require('./baseFor'),
     keysIn = require('../object/keysIn');
 
@@ -8062,7 +8108,7 @@ function baseForIn(object, iteratee) {
 
 module.exports = baseForIn;
 
-},{"../object/keysIn":57,"./baseFor":43}],45:[function(require,module,exports){
+},{"../object/keysIn":59,"./baseFor":44}],46:[function(require,module,exports){
 /**
  * Converts `value` to a string if it is not one. An empty string is returned
  * for `null` or `undefined` values.
@@ -8080,7 +8126,7 @@ function baseToString(value) {
 
 module.exports = baseToString;
 
-},{}],46:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 var identity = require('../utility/identity');
 
 /**
@@ -8121,11 +8167,39 @@ function bindCallback(func, thisArg, argCount) {
 
 module.exports = bindCallback;
 
-},{"../utility/identity":61}],47:[function(require,module,exports){
+},{"../utility/identity":63}],48:[function(require,module,exports){
+var toObject = require('./toObject');
+
 /**
- * Used as the maximum length of an array-like value.
- * See the [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
- * for more details.
+ * Creates a base function for `_.forIn` or `_.forInRight`.
+ *
+ * @private
+ * @param {boolean} [fromRight] Specify iterating from right to left.
+ * @returns {Function} Returns the new base function.
+ */
+function createBaseFor(fromRight) {
+  return function(object, iteratee, keysFunc) {
+    var iterable = toObject(object),
+        props = keysFunc(object),
+        length = props.length,
+        index = fromRight ? length : -1;
+
+    while ((fromRight ? index-- : ++index < length)) {
+      var key = props[index];
+      if (iteratee(iterable[key], key, iterable) === false) {
+        break;
+      }
+    }
+    return object;
+  };
+}
+
+module.exports = createBaseFor;
+
+},{"./toObject":54}],49:[function(require,module,exports){
+/**
+ * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
+ * of an array-like value.
  */
 var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
 
@@ -8145,20 +8219,17 @@ function isIndex(value, length) {
 
 module.exports = isIndex;
 
-},{}],48:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 /**
- * Used as the maximum length of an array-like value.
- * See the [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
- * for more details.
+ * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
+ * of an array-like value.
  */
 var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
 
 /**
  * Checks if `value` is a valid array-like length.
  *
- * **Note:** This function is based on ES `ToLength`. See the
- * [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength)
- * for more details.
+ * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
  *
  * @private
  * @param {*} value The value to check.
@@ -8170,7 +8241,7 @@ function isLength(value) {
 
 module.exports = isLength;
 
-},{}],49:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 /**
  * Checks if `value` is object-like.
  *
@@ -8179,12 +8250,12 @@ module.exports = isLength;
  * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
  */
 function isObjectLike(value) {
-  return (value && typeof value == 'object') || false;
+  return !!value && typeof value == 'object';
 }
 
 module.exports = isObjectLike;
 
-},{}],50:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 var toObject = require('./toObject');
 
 /**
@@ -8214,7 +8285,7 @@ function pickByArray(object, props) {
 
 module.exports = pickByArray;
 
-},{"./toObject":52}],51:[function(require,module,exports){
+},{"./toObject":54}],53:[function(require,module,exports){
 var baseForIn = require('./baseForIn');
 
 /**
@@ -8238,7 +8309,7 @@ function pickByCallback(object, predicate) {
 
 module.exports = pickByCallback;
 
-},{"./baseForIn":44}],52:[function(require,module,exports){
+},{"./baseForIn":45}],54:[function(require,module,exports){
 var isObject = require('../lang/isObject');
 
 /**
@@ -8254,7 +8325,7 @@ function toObject(value) {
 
 module.exports = toObject;
 
-},{"../lang/isObject":56}],53:[function(require,module,exports){
+},{"../lang/isObject":58}],55:[function(require,module,exports){
 var isLength = require('../internal/isLength'),
     isObjectLike = require('../internal/isObjectLike');
 
@@ -8265,9 +8336,8 @@ var argsTag = '[object Arguments]';
 var objectProto = Object.prototype;
 
 /**
- * Used to resolve the `toStringTag` of values.
- * See the [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.prototype.tostring)
- * for more details.
+ * Used to resolve the [`toStringTag`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.prototype.tostring)
+ * of values.
  */
 var objToString = objectProto.toString;
 
@@ -8289,12 +8359,12 @@ var objToString = objectProto.toString;
  */
 function isArguments(value) {
   var length = isObjectLike(value) ? value.length : undefined;
-  return (isLength(length) && objToString.call(value) == argsTag) || false;
+  return isLength(length) && objToString.call(value) == argsTag;
 }
 
 module.exports = isArguments;
 
-},{"../internal/isLength":48,"../internal/isObjectLike":49}],54:[function(require,module,exports){
+},{"../internal/isLength":50,"../internal/isObjectLike":51}],56:[function(require,module,exports){
 var isLength = require('../internal/isLength'),
     isNative = require('./isNative'),
     isObjectLike = require('../internal/isObjectLike');
@@ -8306,9 +8376,8 @@ var arrayTag = '[object Array]';
 var objectProto = Object.prototype;
 
 /**
- * Used to resolve the `toStringTag` of values.
- * See the [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.prototype.tostring)
- * for more details.
+ * Used to resolve the [`toStringTag`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.prototype.tostring)
+ * of values.
  */
 var objToString = objectProto.toString;
 
@@ -8332,12 +8401,12 @@ var nativeIsArray = isNative(nativeIsArray = Array.isArray) && nativeIsArray;
  * // => false
  */
 var isArray = nativeIsArray || function(value) {
-  return (isObjectLike(value) && isLength(value.length) && objToString.call(value) == arrayTag) || false;
+  return isObjectLike(value) && isLength(value.length) && objToString.call(value) == arrayTag;
 };
 
 module.exports = isArray;
 
-},{"../internal/isLength":48,"../internal/isObjectLike":49,"./isNative":55}],55:[function(require,module,exports){
+},{"../internal/isLength":50,"../internal/isObjectLike":51,"./isNative":57}],57:[function(require,module,exports){
 var escapeRegExp = require('../string/escapeRegExp'),
     isObjectLike = require('../internal/isObjectLike');
 
@@ -8354,9 +8423,8 @@ var objectProto = Object.prototype;
 var fnToString = Function.prototype.toString;
 
 /**
- * Used to resolve the `toStringTag` of values.
- * See the [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.prototype.tostring)
- * for more details.
+ * Used to resolve the [`toStringTag`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.prototype.tostring)
+ * of values.
  */
 var objToString = objectProto.toString;
 
@@ -8389,17 +8457,15 @@ function isNative(value) {
   if (objToString.call(value) == funcTag) {
     return reNative.test(fnToString.call(value));
   }
-  return (isObjectLike(value) && reHostCtor.test(value)) || false;
+  return isObjectLike(value) && reHostCtor.test(value);
 }
 
 module.exports = isNative;
 
-},{"../internal/isObjectLike":49,"../string/escapeRegExp":59}],56:[function(require,module,exports){
+},{"../internal/isObjectLike":51,"../string/escapeRegExp":61}],58:[function(require,module,exports){
 /**
- * Checks if `value` is the language type of `Object`.
+ * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
  * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * **Note:** See the [ES5 spec](https://es5.github.io/#x8) for more details.
  *
  * @static
  * @memberOf _
@@ -8421,12 +8487,12 @@ function isObject(value) {
   // Avoid a V8 JIT bug in Chrome 19-20.
   // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
   var type = typeof value;
-  return type == 'function' || (value && type == 'object') || false;
+  return type == 'function' || (!!value && type == 'object');
 }
 
 module.exports = isObject;
 
-},{}],57:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 var isArguments = require('../lang/isArguments'),
     isArray = require('../lang/isArray'),
     isIndex = require('../internal/isIndex'),
@@ -8493,18 +8559,19 @@ function keysIn(object) {
 
 module.exports = keysIn;
 
-},{"../internal/isIndex":47,"../internal/isLength":48,"../lang/isArguments":53,"../lang/isArray":54,"../lang/isObject":56,"../support":60}],58:[function(require,module,exports){
+},{"../internal/isIndex":49,"../internal/isLength":50,"../lang/isArguments":55,"../lang/isArray":56,"../lang/isObject":58,"../support":62}],60:[function(require,module,exports){
 var baseFlatten = require('../internal/baseFlatten'),
     bindCallback = require('../internal/bindCallback'),
     pickByArray = require('../internal/pickByArray'),
-    pickByCallback = require('../internal/pickByCallback');
+    pickByCallback = require('../internal/pickByCallback'),
+    restParam = require('../function/restParam');
 
 /**
  * Creates an object composed of the picked `object` properties. Property
  * names may be specified as individual arguments or as arrays of property
  * names. If `predicate` is provided it is invoked for each property of `object`
  * picking the properties `predicate` returns truthy for. The predicate is
- * bound to `thisArg` and invoked with three arguments; (value, key, object).
+ * bound to `thisArg` and invoked with three arguments: (value, key, object).
  *
  * @static
  * @memberOf _
@@ -8525,31 +8592,31 @@ var baseFlatten = require('../internal/baseFlatten'),
  * _.pick(object, _.isString);
  * // => { 'user': 'fred' }
  */
-function pick(object, predicate, thisArg) {
+var pick = restParam(function(object, props) {
   if (object == null) {
     return {};
   }
-  return typeof predicate == 'function'
-    ? pickByCallback(object, bindCallback(predicate, thisArg, 3))
-    : pickByArray(object, baseFlatten(arguments, false, false, 1));
-}
+  return typeof props[0] == 'function'
+    ? pickByCallback(object, bindCallback(props[0], props[1], 3))
+    : pickByArray(object, baseFlatten(props));
+});
 
 module.exports = pick;
 
-},{"../internal/baseFlatten":42,"../internal/bindCallback":46,"../internal/pickByArray":50,"../internal/pickByCallback":51}],59:[function(require,module,exports){
+},{"../function/restParam":42,"../internal/baseFlatten":43,"../internal/bindCallback":47,"../internal/pickByArray":52,"../internal/pickByCallback":53}],61:[function(require,module,exports){
 var baseToString = require('../internal/baseToString');
 
 /**
- * Used to match `RegExp` special characters.
- * See this [article on `RegExp` characters](http://www.regular-expressions.info/characters.html#special)
- * for more details.
+ * Used to match `RegExp` [special characters](http://www.regular-expressions.info/characters.html#special).
+ * In addition to special characters the forward slash is escaped to allow for
+ * easier `eval` use and `Function` compilation.
  */
 var reRegExpChars = /[.*+?^${}()|[\]\/\\]/g,
     reHasRegExpChars = RegExp(reRegExpChars.source);
 
 /**
- * Escapes the `RegExp` special characters "\", "^", "$", ".", "|", "?", "*",
- * "+", "(", ")", "[", "]", "{" and "}" in `string`.
+ * Escapes the `RegExp` special characters "\", "/", "^", "$", ".", "|", "?",
+ * "*", "+", "(", ")", "[", "]", "{" and "}" in `string`.
  *
  * @static
  * @memberOf _
@@ -8559,7 +8626,7 @@ var reRegExpChars = /[.*+?^${}()|[\]\/\\]/g,
  * @example
  *
  * _.escapeRegExp('[lodash](https://lodash.com/)');
- * // => '\[lodash\]\(https://lodash\.com/\)'
+ * // => '\[lodash\]\(https:\/\/lodash\.com\/\)'
  */
 function escapeRegExp(string) {
   string = baseToString(string);
@@ -8570,13 +8637,8 @@ function escapeRegExp(string) {
 
 module.exports = escapeRegExp;
 
-},{"../internal/baseToString":45}],60:[function(require,module,exports){
-var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {};var isNative = require('./lang/isNative');
-
-/** Used to detect functions containing a `this` reference. */
-var reThis = /\bthis\b/;
-
-/** Used for native method references. */
+},{"../internal/baseToString":46}],62:[function(require,module,exports){
+var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {};/** Used for native method references. */
 var objectProto = Object.prototype;
 
 /** Used to detect DOM support. */
@@ -8604,7 +8666,7 @@ var support = {};
    * @memberOf _.support
    * @type boolean
    */
-  support.funcDecomp = !isNative(global.WinRTError) && reThis.test(function() { return this; });
+  support.funcDecomp = /\bthis\b/.test(function() { return this; });
 
   /**
    * Detect if `Function#name` is supported (all but IE).
@@ -8647,7 +8709,7 @@ var support = {};
 
 module.exports = support;
 
-},{"./lang/isNative":55}],61:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 /**
  * This method returns the first argument provided to it.
  *
@@ -8669,7 +8731,7 @@ function identity(value) {
 
 module.exports = identity;
 
-},{}],62:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 'use strict';
 module.exports = function (source, target, events) {
   source.on('newListener', function (event, listener) {
@@ -8683,7 +8745,8 @@ module.exports = function (source, target, events) {
     }
   });
 };
-},{}],63:[function(require,module,exports){
+
+},{}],65:[function(require,module,exports){
 'use strict';
 var Writable = require('./writable');
 var Readable = require('./readable');
@@ -8716,7 +8779,8 @@ exports.write = function (chunk, encoding, callback) {
 exports.end = function () {
   this.emit('done');
 };
-},{"./eventProxy":62,"./readable":74,"./writable":75}],64:[function(require,module,exports){
+
+},{"./eventProxy":64,"./readable":75,"./writable":76}],66:[function(require,module,exports){
 var process=require("__browserify_process");// Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8807,7 +8871,7 @@ function forEach (xs, f) {
   }
 }
 
-},{"./_stream_readable":66,"./_stream_writable":68,"__browserify_process":20,"core-util-is":69,"inherits":21}],65:[function(require,module,exports){
+},{"./_stream_readable":68,"./_stream_writable":70,"__browserify_process":20,"core-util-is":71,"inherits":21}],67:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8855,7 +8919,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":67,"core-util-is":69,"inherits":21}],66:[function(require,module,exports){
+},{"./_stream_transform":69,"core-util-is":71,"inherits":21}],68:[function(require,module,exports){
 var process=require("__browserify_process");// Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -9839,7 +9903,7 @@ function indexOf (xs, x) {
   return -1;
 }
 
-},{"__browserify_process":20,"buffer":15,"core-util-is":69,"events":9,"inherits":21,"isarray":70,"stream":10,"string_decoder/":71}],67:[function(require,module,exports){
+},{"__browserify_process":20,"buffer":15,"core-util-is":71,"events":9,"inherits":21,"isarray":72,"stream":10,"string_decoder/":73}],69:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -10051,7 +10115,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":64,"core-util-is":69,"inherits":21}],68:[function(require,module,exports){
+},{"./_stream_duplex":66,"core-util-is":71,"inherits":21}],70:[function(require,module,exports){
 var process=require("__browserify_process");// Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -10439,7 +10503,7 @@ function endWritable(stream, state, cb) {
   state.ended = true;
 }
 
-},{"./_stream_duplex":64,"__browserify_process":20,"buffer":15,"core-util-is":69,"inherits":21,"stream":10}],69:[function(require,module,exports){
+},{"./_stream_duplex":66,"__browserify_process":20,"buffer":15,"core-util-is":71,"inherits":21,"stream":10}],71:[function(require,module,exports){
 var Buffer=require("__browserify_Buffer").Buffer;// Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -10547,12 +10611,12 @@ exports.isBuffer = isBuffer;
 function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
-},{"__browserify_Buffer":19}],70:[function(require,module,exports){
+},{"__browserify_Buffer":19}],72:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],71:[function(require,module,exports){
+},{}],73:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -10775,7 +10839,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":15}],72:[function(require,module,exports){
+},{"buffer":15}],74:[function(require,module,exports){
 var Stream = require('stream'); // hack to fix a circular dependency issue when used with browserify
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = Stream;
@@ -10785,29 +10849,9 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":64,"./lib/_stream_passthrough.js":65,"./lib/_stream_readable.js":66,"./lib/_stream_transform.js":67,"./lib/_stream_writable.js":68,"stream":10}],73:[function(require,module,exports){
-module.exports = extend
-
-function extend() {
-    var target = {}
-
-    for (var i = 0; i < arguments.length; i++) {
-        var source = arguments[i]
-
-        for (var key in source) {
-            if (source.hasOwnProperty(key)) {
-                target[key] = source[key]
-            }
-        }
-    }
-
-    return target
-}
-
-},{}],74:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":66,"./lib/_stream_passthrough.js":67,"./lib/_stream_readable.js":68,"./lib/_stream_transform.js":69,"./lib/_stream_writable.js":70,"stream":10}],75:[function(require,module,exports){
 'use strict';
 var inherits = require('inherits');
-var extend = require('xtend');
 var Readable = require('readable-stream').Readable;
 
 module.exports = ReadStream;
@@ -10820,11 +10864,14 @@ function ReadStream(db, opts) {
   Readable.call(this, {
     objectMode: true
   });
-  this.opts = extend({
+  opts = opts || {};
+  var thisOpts = this.opts = {
     since: 0
-  }, opts, {
-    returnDocs: false
+  };
+  Object.keys(opts).forEach(function (key) {
+    thisOpts[key] = opts[key];
   });
+  this.opts.returnDocs = false;
   this.last = opts.since;
   this.db = db;
   this.changes = void 0;
@@ -10855,9 +10902,10 @@ ReadStream.prototype.cancel = function () {
   if (this.changes && typeof this.changes.cancel === 'function') {
     return this.changes.cancel();
   }
-}
-},{"inherits":21,"readable-stream":72,"xtend":73}],75:[function(require,module,exports){
-'use strict';
+};
+
+},{"inherits":21,"readable-stream":74}],76:[function(require,module,exports){
+var Buffer=require("__browserify_Buffer").Buffer;'use strict';
 var inherits = require('inherits');
 var Writable = require('readable-stream').Writable;
 
@@ -10876,6 +10924,16 @@ function WriteStream(db, opts) {
 }
 
 WriteStream.prototype._write = function (chunk, _, next) {
+  if (Buffer.isBuffer(chunk)) {
+    chunk = chunk.toString();
+  }
+  if (typeof chunk === 'string') {
+    try {
+      chunk = JSON.parse(chunk);
+    } catch (e) {
+      return next(e);
+    }
+  }
   if (Array.isArray(chunk)) {
     this.db.bulkDocs({docs: chunk}, this.opts).then(function () {
       next();
@@ -10890,7 +10948,8 @@ WriteStream.prototype._write = function (chunk, _, next) {
     }, next);
   }
 };
-},{"inherits":21,"readable-stream":72}],76:[function(require,module,exports){
+
+},{"__browserify_Buffer":19,"inherits":21,"readable-stream":74}],77:[function(require,module,exports){
 "use strict";
 
 // Extends method
@@ -11071,26 +11130,43 @@ module.exports = extend;
 
 
 
-},{}],77:[function(require,module,exports){
-arguments[4][64][0].apply(exports,arguments)
-},{"./_stream_readable":78,"./_stream_writable":80,"__browserify_process":20,"core-util-is":81,"inherits":21}],78:[function(require,module,exports){
-module.exports=require(66)
-},{"__browserify_process":20,"buffer":15,"core-util-is":81,"events":9,"inherits":21,"isarray":82,"stream":10,"string_decoder/":83}],79:[function(require,module,exports){
-arguments[4][67][0].apply(exports,arguments)
-},{"./_stream_duplex":77,"core-util-is":81,"inherits":21}],80:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"./_stream_duplex":77,"__browserify_process":20,"buffer":15,"core-util-is":81,"inherits":21,"stream":10}],81:[function(require,module,exports){
-module.exports=require(69)
-},{"__browserify_Buffer":19}],82:[function(require,module,exports){
-module.exports=require(70)
-},{}],83:[function(require,module,exports){
+},{}],78:[function(require,module,exports){
+arguments[4][66][0].apply(exports,arguments)
+},{"./_stream_readable":79,"./_stream_writable":81,"__browserify_process":20,"core-util-is":82,"inherits":21}],79:[function(require,module,exports){
+module.exports=require(68)
+},{"__browserify_process":20,"buffer":15,"core-util-is":82,"events":9,"inherits":21,"isarray":83,"stream":10,"string_decoder/":84}],80:[function(require,module,exports){
+arguments[4][69][0].apply(exports,arguments)
+},{"./_stream_duplex":78,"core-util-is":82,"inherits":21}],81:[function(require,module,exports){
+arguments[4][70][0].apply(exports,arguments)
+},{"./_stream_duplex":78,"__browserify_process":20,"buffer":15,"core-util-is":82,"inherits":21,"stream":10}],82:[function(require,module,exports){
 module.exports=require(71)
-},{"buffer":15}],84:[function(require,module,exports){
+},{"__browserify_Buffer":19}],83:[function(require,module,exports){
+module.exports=require(72)
+},{}],84:[function(require,module,exports){
+module.exports=require(73)
+},{"buffer":15}],85:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":79}],85:[function(require,module,exports){
-module.exports=require(73)
-},{}],86:[function(require,module,exports){
+},{"./lib/_stream_transform.js":80}],86:[function(require,module,exports){
+module.exports = extend
+
+function extend() {
+    var target = {}
+
+    for (var i = 0; i < arguments.length; i++) {
+        var source = arguments[i]
+
+        for (var key in source) {
+            if (source.hasOwnProperty(key)) {
+                target[key] = source[key]
+            }
+        }
+    }
+
+    return target
+}
+
+},{}],87:[function(require,module,exports){
 var process=require("__browserify_process");var Transform = require('readable-stream/transform')
   , inherits  = require('util').inherits
   , xtend     = require('xtend')
@@ -11188,10 +11264,10 @@ module.exports.obj = through2(function (options, transform, flush) {
   return t2
 })
 
-},{"__browserify_process":20,"readable-stream/transform":84,"util":13,"xtend":85}],87:[function(require,module,exports){
+},{"__browserify_process":20,"readable-stream/transform":85,"util":13,"xtend":86}],88:[function(require,module,exports){
 module.exports={
   "name": "pouchdb-replication-stream",
-  "version": "1.1.1",
+  "version": "1.2.1",
   "description": "PouchDB/CouchDB replication as a stream",
   "main": "index.js",
   "repository": {
@@ -11263,7 +11339,7 @@ module.exports={
   }
 }
 
-},{}],88:[function(require,module,exports){
+},{}],89:[function(require,module,exports){
 var process=require("__browserify_process"),global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {};'use strict';
 
 var Promise;
@@ -11349,9 +11425,9 @@ exports.extend = require('pouchdb-extend');
 exports.inherits = require('inherits');
 exports.Promise = Promise;
 
-},{"__browserify_process":20,"inherits":21,"lie":27,"pouchdb-extend":76}],89:[function(require,module,exports){
+},{"__browserify_process":20,"inherits":21,"lie":27,"pouchdb-extend":77}],90:[function(require,module,exports){
 module.exports = require('./package.json').version;
-},{"./package.json":87}],90:[function(require,module,exports){
+},{"./package.json":88}],91:[function(require,module,exports){
 var process=require("__browserify_process");'use strict';
 
 var utils = require('./pouch-utils');
@@ -11502,5 +11578,5 @@ WritableStreamPouch.destroy = utils.toPromise(function (name, opts, callback) {
 
 module.exports = WritableStreamPouch;
 
-},{"./pouch-utils":88,"__browserify_process":20,"ldjson-stream":22}]},{},[1])
+},{"./pouch-utils":89,"__browserify_process":20,"ldjson-stream":22}]},{},[1])
 ;

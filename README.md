@@ -21,6 +21,7 @@ More to come.
 
 * [pouchdb-dump-cli](https://github.com/nolanlawson/pouchdb-dump-cli)
 * [pouchdb-load](https://github.com/nolanlawson/pouchdb-load)
+* [express-pouchdb-replication-stream](https://github.com/conor-mac-aoidh/express-pouchdb-replication-stream)
 
 Usage
 -------

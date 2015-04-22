@@ -5,7 +5,7 @@ var version = require('./version');
 var ldj = require('ldjson-stream');
 var through = require('through2').obj;
 var pick = require('lodash/object/pick');
-
+var toBufferStream = require('./to-buffer-stream');
 var DEFAULT_BATCH_SIZE = 50;
 
 // params to the replicate() API that the user is allowed to specify
@@ -80,7 +80,7 @@ exports.plugin.load = utils.toPromise(function (readableStream, opts, callback) 
   }
 
   var queue = [];
-  readableStream.pipe(ldj.parse()).pipe(through(function (data, _, next) {
+  readableStream.pipe(toBufferStream()).pipe(ldj.parse()).pipe(through(function (data, _, next) {
     if (!data.docs) {
       return next();
     }

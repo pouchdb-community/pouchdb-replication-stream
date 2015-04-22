@@ -6,7 +6,7 @@ var version = require('./version');
 var ldj = require('ldjson-stream');
 var through = require('through2').obj;
 var pick = require('lodash/object/pick');
-
+var toBufferStream = require('./to-buffer-stream');
 var DEFAULT_BATCH_SIZE = 50;
 
 // params to the replicate() API that the user is allowed to specify
@@ -81,7 +81,7 @@ exports.plugin.load = utils.toPromise(function (readableStream, opts, callback) 
   }
 
   var queue = [];
-  readableStream.pipe(ldj.parse()).pipe(through(function (data, _, next) {
+  readableStream.pipe(toBufferStream()).pipe(ldj.parse()).pipe(through(function (data, _, next) {
     if (!data.docs) {
       return next();
     }
@@ -117,7 +117,7 @@ if (typeof window !== 'undefined' && window.PouchDB) {
   window.PouchDB.adapter('writableStream', exports.adapters.writableStream);
 }
 
-},{"./pouch-utils":89,"./version":90,"./writable-stream":91,"ldjson-stream":22,"lodash/object/pick":60,"pouch-stream":65,"through2":87}],2:[function(require,module,exports){
+},{"./pouch-utils":89,"./to-buffer-stream":90,"./version":91,"./writable-stream":92,"ldjson-stream":22,"lodash/object/pick":60,"pouch-stream":65,"through2":87}],2:[function(require,module,exports){
 
 
 //
@@ -7997,7 +7997,7 @@ function restParam(func, start) {
   if (typeof func != 'function') {
     throw new TypeError(FUNC_ERROR_TEXT);
   }
-  start = nativeMax(typeof start == 'undefined' ? (func.length - 1) : (+start || 0), 0);
+  start = nativeMax(start === undefined ? (func.length - 1) : (+start || 0), 0);
   return function() {
     var args = arguments,
         index = -1,
@@ -8076,7 +8076,7 @@ var createBaseFor = require('./createBaseFor');
 /**
  * The base implementation of `baseForIn` and `baseForOwn` which iterates
  * over `object` properties returned by `keysFunc` invoking `iteratee` for
- * each property. Iterator functions may exit iteration early by explicitly
+ * each property. Iteratee functions may exit iteration early by explicitly
  * returning `false`.
  *
  * @private
@@ -8143,7 +8143,7 @@ function bindCallback(func, thisArg, argCount) {
   if (typeof func != 'function') {
     return identity;
   }
-  if (typeof thisArg == 'undefined') {
+  if (thisArg === undefined) {
     return func;
   }
   switch (argCount) {
@@ -8260,7 +8260,7 @@ var toObject = require('./toObject');
 
 /**
  * A specialized version of `_.pick` that picks `object` properties specified
- * by the `props` array.
+ * by `props`.
  *
  * @private
  * @param {Object} object The source object.
@@ -8414,7 +8414,7 @@ var escapeRegExp = require('../string/escapeRegExp'),
 var funcTag = '[object Function]';
 
 /** Used to detect host constructors (Safari > 5). */
-var reHostCtor = /^\[object .+?Constructor\]$/;
+var reIsHostCtor = /^\[object .+?Constructor\]$/;
 
 /** Used for native method references. */
 var objectProto = Object.prototype;
@@ -8429,7 +8429,7 @@ var fnToString = Function.prototype.toString;
 var objToString = objectProto.toString;
 
 /** Used to detect if a method is native. */
-var reNative = RegExp('^' +
+var reIsNative = RegExp('^' +
   escapeRegExp(objToString)
   .replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$'
 );
@@ -8455,9 +8455,9 @@ function isNative(value) {
     return false;
   }
   if (objToString.call(value) == funcTag) {
-    return reNative.test(fnToString.call(value));
+    return reIsNative.test(fnToString.call(value));
   }
-  return isObjectLike(value) && reHostCtor.test(value);
+  return isObjectLike(value) && reIsHostCtor.test(value);
 }
 
 module.exports = isNative;
@@ -8514,7 +8514,7 @@ var hasOwnProperty = objectProto.hasOwnProperty;
  * @static
  * @memberOf _
  * @category Object
- * @param {Object} object The object to inspect.
+ * @param {Object} object The object to query.
  * @returns {Array} Returns the array of property names.
  * @example
  *
@@ -8657,6 +8657,12 @@ var propertyIsEnumerable = objectProto.propertyIsEnumerable;
 var support = {};
 
 (function(x) {
+  var Ctor = function() { this.x = x; },
+      object = { '0': x, 'length': x },
+      props = [];
+
+  Ctor.prototype = { 'valueOf': x, 'y': x };
+  for (var key in new Ctor) { props.push(key); }
 
   /**
    * Detect if functions can be decompiled by `Function#toString`
@@ -8694,8 +8700,8 @@ var support = {};
    * In Firefox < 4, IE < 9, PhantomJS, and Safari < 5.1 `arguments` object
    * indexes are non-enumerable. Chrome < 25 and Node.js < 0.11.0 treat
    * `arguments` object indexes as non-enumerable and fail `hasOwnProperty`
-   * checks for indexes that exceed their function's formal parameters with
-   * associated values of `0`.
+   * checks for indexes that exceed the number of function parameters and
+   * whose associated argument values are `0`.
    *
    * @memberOf _.support
    * @type boolean
@@ -8705,7 +8711,7 @@ var support = {};
   } catch(e) {
     support.nonEnumArgs = true;
   }
-}(0, 0));
+}(1, 0));
 
 module.exports = support;
 
@@ -11426,8 +11432,25 @@ exports.inherits = require('inherits');
 exports.Promise = Promise;
 
 },{"__browserify_process":20,"inherits":21,"lie":27,"pouchdb-extend":77}],90:[function(require,module,exports){
+var Buffer=require("__browserify_Buffer").Buffer;'use strict';
+
+var through = require('through2').obj;
+
+module.exports = function () {
+  return through(function (chunk, _, next) {
+    // this only applies in the browser
+    /* istanbul ignore next */
+    if (!(chunk instanceof Buffer) && Buffer.isBuffer(chunk)) {
+      chunk = new Buffer(chunk);
+    }
+    this.push(chunk);
+    next();
+  });
+};
+
+},{"__browserify_Buffer":19,"through2":87}],91:[function(require,module,exports){
 module.exports = require('./package.json').version;
-},{"./package.json":88}],91:[function(require,module,exports){
+},{"./package.json":88}],92:[function(require,module,exports){
 var process=require("__browserify_process");'use strict';
 
 var utils = require('./pouch-utils');

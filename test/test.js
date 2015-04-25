@@ -209,6 +209,22 @@ function tests(dbName, dbType) {
       });
     });
 
+    it('should dump to a string', function () {
+
+      var concat = require('concat-stream');
+
+      var dumpedString = '';
+      var readStream = concat({encoding: 'string'}, function (line) {
+        dumpedString += line;
+      });
+
+      return db.put({_id: '1'}).then(function () {
+        return db.dump(readStream);
+      }).then(function () {
+        dumpedString.should.be.a('string', 'got a string');
+      });
+    });
+
   });
 
 }

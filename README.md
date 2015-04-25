@@ -135,7 +135,7 @@ PouchDB.adapter('writableStream', replicationStream.adapters.writableStream);
 Stream directly without the dump file
 ---
 
-You can use a `MemoryStream` to stream directly without dumping to a file. Here's an example:
+You can use a [`MemoryStream`](https://github.com/JSBizon/node-memorystream) to stream directly without dumping to a file. Here's an example:
 
 ```js
 var Promise = require('bluebird');
@@ -157,6 +157,35 @@ Promise.all([
   console.log('Hooray the stream replication is complete!');
 });
 ```
+
+Dumping to a string
+---
+
+You can use [`concat-stream`](https://github.com/maxogden/concat-stream) to read in the entire
+stream and dump it to a string. This will also work in the browser if you browserify it.
+
+Example:
+
+```js
+var PouchDB = require('pouchdb');
+var replicationStream = require('pouchdb-replication-stream');
+var concat = require('concat-stream');
+
+PouchDB.plugin(replicationStream.plugin);
+PouchDB.adapter('writableStream', replicationStream.adapters.writableStream);
+
+var dumpedString = '';
+var stream = concat({encoding: 'string'}, function (line) {
+  dumpedString += line;
+});
+
+var db = new PouchDB('my_db');
+
+db.dump(stream).then(function () {
+  console.log('Yay, I have a dumpedString: ' + dumpedString);
+});
+```
+
 
 Building
 ----

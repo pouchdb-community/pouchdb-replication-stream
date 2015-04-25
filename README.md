@@ -158,6 +158,8 @@ Promise.all([
 });
 ```
 
+If you aren't using Browserify, you can download `MemoryStream` from [https://wzrd.in/standalone/memorystream@latest](https://wzrd.in/standalone/memorystream@latest).
+
 Dumping to a string
 ---
 
@@ -186,6 +188,7 @@ db.dump(stream).then(function () {
 });
 ```
 
+If you aren't using Browserify, you can download `concat-stream` from [https://wzrd.in/standalone/concat-stream@latest](https://wzrd.in/standalone/concat-stream@latest).
 
 Building
 ----

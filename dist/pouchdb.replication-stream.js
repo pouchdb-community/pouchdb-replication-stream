@@ -8525,7 +8525,7 @@ module.exports.obj = through2(function (options, transform, flush) {
 },{"_process":10,"readable-stream/transform":90,"util":25,"xtend":91}],93:[function(_dereq_,module,exports){
 module.exports={
   "name": "pouchdb-replication-stream",
-  "version": "1.2.2",
+  "version": "1.2.4",
   "description": "PouchDB/CouchDB replication as a stream",
   "main": "index.js",
   "repository": {
@@ -8569,12 +8569,13 @@ module.exports={
     "through2": "^0.6.1"
   },
   "devDependencies": {
-    "es3ify": "^0.1.3",
     "bluebird": "^1.0.7",
     "browserify": "^9.0.8",
     "chai": "~1.8.1",
     "chai-as-promised": "~4.1.0",
+    "concat-stream": "^1.4.8",
     "derequire": "^2.0.0",
+    "es3ify": "^0.1.3",
     "http-server": "~0.5.5",
     "istanbul": "^0.2.7",
     "jshint": "~2.3.0",

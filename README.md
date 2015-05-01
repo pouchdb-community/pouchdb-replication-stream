@@ -17,14 +17,14 @@ This has many uses:
 Suite of Tools
 ---------
 
-These tools are based on `pouchdb-replication-stream`. You're encouraged to write your own!
-
-
 * [pouchdb-dump-cli](https://github.com/nolanlawson/pouchdb-dump-cli)
 * [pouchdb-load](https://github.com/nolanlawson/pouchdb-load)
 * [express-pouchdb-replication-stream](https://github.com/conor-mac-aoidh/express-pouchdb-replication-stream)
 
-You can also easily [dump to a string](#dumping-to-a-string) or [replicate with in-memory streams](https://github.com/nolanlawson/pouchdb-replication-stream#stream-directly-without-the-dump-file).
+You can also use `pouchdb-replication-stream` itself to:
+  * [dump to a string](#dumping-to-a-string)
+  * [replicate with in-memory streams](https://github.com/nolanlawson/pouchdb-replication-stream#stream-directly-without-the-dump-file).
+  * do anything you can do with streams :)
 
 Usage
 -------

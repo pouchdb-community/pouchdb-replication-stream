@@ -21,9 +21,12 @@ Suite of Tools
 * [pouchdb-load](https://github.com/nolanlawson/pouchdb-load)
 * [express-pouchdb-replication-stream](https://github.com/conor-mac-aoidh/express-pouchdb-replication-stream)
 
-You can also use `pouchdb-replication-stream` itself to:
+Examples
+------
+
+You can use `pouchdb-replication-stream` itself to:
   * [dump to a string](#dumping-to-a-string)
-  * [replicate with in-memory streams](https://github.com/nolanlawson/pouchdb-replication-stream#stream-directly-without-the-dump-file).
+  * [replicate with in-memory streams](https://github.com/nolanlawson/pouchdb-replication-stream#stream-directly-without-the-dump-file)
   * do anything you can do with streams :)
 
 Usage

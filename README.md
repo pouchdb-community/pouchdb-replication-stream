@@ -110,6 +110,8 @@ At the end of the `load()` process, the target database will function exactly as
 
 Some lines may contain `seq`s; these are used as checkpoints. The `seq` line says, "When you have loaded all the preceding documents, you are now at update_seq `seq`."
 
+For the time being, attachments are just included as base64-encoded strings, ala CouchDB's `_all_docs` with `Accept: application/json`.
+
 Installation
 --------
 

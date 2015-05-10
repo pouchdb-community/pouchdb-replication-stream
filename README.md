@@ -94,9 +94,9 @@ The replication stream looks like this:
 
 ```js
 {"version":"0.1.0","db_type":"leveldb","start_time":"2014-09-07T21:31:01.527Z","db_info":{"doc_count":3,"update_seq":3,"db_name":"testdb"}}
-{"docs":[{"_id":"doc1","_rev":"1-20624ff392c68c359adb98504a369769","foo":"bar"}]}
-{"docs":[{"_id":"doc2","_rev":"1-8b6f55822a3e3932ac1e9ddb8b0357cb","bar":"baz"}]}
-{"docs":[{"_id":"doc3","_rev":"1-2567345aa745c1d85602add2689dc398","baz":"quux"}]
+{"docs":[{"_id":"doc1","_rev":"1-x","_revisions":{"start":1,"ids":["x"]},"foo":"bar"}]}
+{"docs":[{"_id":"doc2","_rev":"1-y","_revisions":{"start":1,"ids":["y"]},"foo":"baz"}]}
+{"docs":[{"_id":"doc3","_rev":"1-z","_revisions":{"start":1,"ids":["z"]},"foo":"quux"}]}
 {"seq":3}
 ```
 

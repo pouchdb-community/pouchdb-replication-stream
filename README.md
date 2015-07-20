@@ -166,13 +166,13 @@ Promise.all([
 });
 ```
 
-If you aren't using Browserify, you can download `MemoryStream` from [https://wzrd.in/standalone/memorystream@latest](https://wzrd.in/standalone/memorystream@latest).
+If you aren't using [Browserify](http://browserify.org/), you can download `MemoryStream` from [https://wzrd.in/standalone/memorystream@latest](https://wzrd.in/standalone/memorystream@latest).
 
 Dumping to a string
 ---
 
 You can use [`concat-stream`](https://github.com/maxogden/concat-stream) to read in the entire
-stream and dump it to a string. This will also work in the browser if you browserify it.
+stream and dump it to a string.
 
 Example:
 
@@ -196,7 +196,7 @@ db.dump(stream).then(function () {
 });
 ```
 
-If you aren't using Browserify, you can download `concat-stream` from [https://wzrd.in/standalone/concat-stream@latest](https://wzrd.in/standalone/concat-stream@latest).
+This will also work in the browser via [Browserify](http://browserify.org/). If you aren't using Browserify, then you can download `concat-stream` from [https://wzrd.in/standalone/concat-stream@latest](https://wzrd.in/standalone/concat-stream@latest) and it will be available as `window.concatStream`.
 
 Building
 ----

@@ -166,7 +166,7 @@ Promise.all([
 });
 ```
 
-If you aren't using [Browserify](http://browserify.org/), you can download `MemoryStream` from [https://wzrd.in/standalone/memorystream@latest](https://wzrd.in/standalone/memorystream@latest).
+This will also work in the browser if you are using [Browserify](http://browserify.org). If you aren't using Browserify, then you can download `MemoryStream` from [https://wzrd.in/standalone/memorystream@latest](https://wzrd.in/standalone/memorystream@latest) and it will be available as `window.memorystream`.
 
 Dumping to a string
 ---

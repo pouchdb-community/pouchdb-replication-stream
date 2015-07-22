@@ -169,7 +169,7 @@ This will also work in the browser if you are using [Browserify](http://browseri
 
 If you aren't using Browserify, then you can download `MemoryStream` from [https://wzrd.in/standalone/memorystream@latest](https://wzrd.in/standalone/memorystream@latest) and it will be available as `window.memorystream`.
 
-**********************************************Example:
+Example:
 
 ```html
 <script src="lib/pouchdb/dist/pouchdb.js"></script>
@@ -243,7 +243,7 @@ dumpedString += line;
 remoteDB.dump(stream).then(function () {
   console.log('Yay, I have a dumpedString: ' + dumpedString);
 });
-
+```
 
 Building
 ----

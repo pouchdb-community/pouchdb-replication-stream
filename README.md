@@ -130,7 +130,7 @@ Or to use it in Node.js, just npm install it:
 
     npm install pouchdb-replication-stream
 
-And then attach it to the `PouchDB` object using the following code:
+In Node.js, you can attach it to the `PouchDB` object using the following code:
 
 ```js
 var PouchDB = require('pouchdb');
@@ -143,7 +143,7 @@ PouchDB.adapter('writableStream', replicationStream.adapters.writableStream);
 Stream directly without the dump file
 ---
 
-You can use a [`MemoryStream`](https://github.com/JSBizon/node-memorystream) to stream directly without dumping to a file. Here's an example:
+On Node.js or with [`Browserify`](http://browserify.org/) You can use a [`MemoryStream`](https://github.com/JSBizon/node-memorystream) to stream directly without dumping to a file. Here's an example:
 
 ```js
 var Promise = require('bluebird');
@@ -165,8 +165,32 @@ Promise.all([
   console.log('Hooray the stream replication is complete!');
 });
 ```
+This will also work in the browser if you are using [Browserify](http://browserify.org).
 
-This will also work in the browser if you are using [Browserify](http://browserify.org). If you aren't using Browserify, then you can download `MemoryStream` from [https://wzrd.in/standalone/memorystream@latest](https://wzrd.in/standalone/memorystream@latest) and it will be available as `window.memorystream`.
+If you aren't using Browserify, then you can download `MemoryStream` from [https://wzrd.in/standalone/memorystream@latest](https://wzrd.in/standalone/memorystream@latest) and it will be available as `window.memorystream`.
+
+**********************************************Example:
+
+```html
+<script src="lib/pouchdb/dist/pouchdb.js"></script>
+<script src="lib/pouchdb-replication-stream/dist/pouchdb.replication-stream.js"></script>
+<script src="lib/memorystream/memorystream.js"></script>
+```
+```js
+var localDB = new PouchDB('foo');
+var remoteDB = new PouchDB('bar');
+
+var memoryStream = window.memorystream;
+var stream = new memoryStream();
+
+var options = {}; //batch_size, live, filter, retry, since, etc....
+Promise.all([
+  remoteDB.dump(stream),
+  localDB.load(stream,options)
+]).then(function () {
+  console.log('Hooray the stream replication is complete!');
+});
+```
 
 Dumping to a string
 ---
@@ -197,6 +221,29 @@ db.dump(stream).then(function () {
 ```
 
 This will also work in the browser via [Browserify](http://browserify.org/). If you aren't using Browserify, then you can download `concat-stream` from [https://wzrd.in/standalone/concat-stream@latest](https://wzrd.in/standalone/concat-stream@latest) and it will be available as `window.concatStream`.
+
+Example:
+
+```html
+<script src="lib/pouchdb/dist/pouchdb.js"></script>
+<script src="lib/pouchdb-replication-stream/dist/pouchdb.replication-stream.js"></script>
+<script src="lib/concat-stream/concat-stream.js"></script>
+```
+
+```js
+var remoteDB = new PouchDB('bar');
+
+var concatStream = window.concatStream;
+var concat = new concatStream();
+var dumpedString = '';
+var stream = concatStream({encoding: 'string'}, function (line) {
+dumpedString += line;
+});
+
+remoteDB.dump(stream).then(function () {
+  console.log('Yay, I have a dumpedString: ' + dumpedString);
+});
+
 
 Building
 ----

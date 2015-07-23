@@ -188,7 +188,7 @@ var source = new PouchDB('http://localhost:5984/source_db');
 var dest = new PouchDB('local_destination');
 
 Promise.all([
-  source(stream),
+  source.dump(stream),
   dest.load(stream)
 ]).then(function () {
   console.log('Hooray the stream replication is complete!');
@@ -238,7 +238,7 @@ Example:
 ```
 
 ```js
-var remoteDB = new PouchDB('my_db');
+var db = new PouchDB('my_db');
 
 var concat = window.concatStream;
 
@@ -247,7 +247,7 @@ var stream = concat({encoding: 'string'}, function (line) {
   dumpedString += line;
 });
 
-remoteDB.dump(stream).then(function () {
+db.dump(stream).then(function () {
   console.log('Yay, I have a dumpedString: ' + dumpedString);
 }).catch(function (err) {
   console.log('oh no an error', err);

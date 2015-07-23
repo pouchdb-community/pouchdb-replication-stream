@@ -143,7 +143,7 @@ PouchDB.adapter('writableStream', replicationStream.adapters.writableStream);
 Stream directly without the dump file
 ---
 
-On Node.js or with [`Browserify`](http://browserify.org/) You can use a [`MemoryStream`](https://github.com/JSBizon/node-memorystream) to stream directly without dumping to a file. Here's an example:
+On Node.js or with [`Browserify`](http://browserify.org/), ou can use a [`MemoryStream`](https://github.com/JSBizon/node-memorystream) to stream directly without dumping to a file. Here's an example:
 
 ```js
 var Promise = require('bluebird');
@@ -163,8 +163,11 @@ Promise.all([
   dest.load(stream)
 ]).then(function () {
   console.log('Hooray the stream replication is complete!');
+}).catch(function (err) {
+  console.log('oh no an error', err);
 });
 ```
+
 This will also work in the browser if you are using [Browserify](http://browserify.org).
 
 If you aren't using Browserify, then you can download `MemoryStream` from [https://wzrd.in/standalone/memorystream@latest](https://wzrd.in/standalone/memorystream@latest) and it will be available as `window.memorystream`.
@@ -176,19 +179,21 @@ Example:
 <script src="lib/pouchdb-replication-stream/dist/pouchdb.replication-stream.js"></script>
 <script src="lib/memorystream/memorystream.js"></script>
 ```
+
 ```js
 var localDB = new PouchDB('foo');
 var remoteDB = new PouchDB('bar');
 
-var memoryStream = window.memorystream;
-var stream = new memoryStream();
+var source = new PouchDB('http://localhost:5984/source_db');
+var dest = new PouchDB('local_destination');
 
-var options = {}; //batch_size, live, filter, retry, since, etc....
 Promise.all([
-  remoteDB.dump(stream),
-  localDB.load(stream,options)
+  source(stream),
+  dest.load(stream)
 ]).then(function () {
   console.log('Hooray the stream replication is complete!');
+}).catch(function (err) {
+  console.log('oh no an error', err);
 });
 ```
 
@@ -217,6 +222,8 @@ var db = new PouchDB('my_db');
 
 db.dump(stream).then(function () {
   console.log('Yay, I have a dumpedString: ' + dumpedString);
+}).catch(function (err) {
+  console.log('oh no an error', err);
 });
 ```
 
@@ -231,17 +238,19 @@ Example:
 ```
 
 ```js
-var remoteDB = new PouchDB('bar');
+var remoteDB = new PouchDB('my_db');
 
-var concatStream = window.concatStream;
-var concat = new concatStream();
+var concat = window.concatStream;
+
 var dumpedString = '';
-var stream = concatStream({encoding: 'string'}, function (line) {
-dumpedString += line;
+var stream = concat({encoding: 'string'}, function (line) {
+  dumpedString += line;
 });
 
 remoteDB.dump(stream).then(function () {
   console.log('Yay, I have a dumpedString: ' + dumpedString);
+}).catch(function (err) {
+  console.log('oh no an error', err);
 });
 ```
 

@@ -254,6 +254,19 @@ db.dump(stream).then(function () {
 });
 ```
 
+Known pitfalls
+---
+
+### Read error 400 ECONNRESET
+
+Basically this means your CouchDB cannot handle all concurrent requests happening. Most probable cause is you have 200+ attachments on one of your documents.
+
+One simple way to get around this error is to limit the globalAgent maxSockets, which manages the maximum number of concurret http requests.
+
+```js
+require('http').globalAgent.maxSockets = 25;
+```
+
 Building
 ----
     npm install

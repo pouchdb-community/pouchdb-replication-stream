@@ -48,7 +48,6 @@
     "browserify": "^9.0.8",
     "chai": "~1.8.1",
     "chai-as-promised": "~4.1.0",
-    "concat-stream": "^1.4.8",
     "derequire": "^2.0.0",
     "es3ify": "^0.1.3",
     "http-server": "~0.5.5",

@@ -3,7 +3,7 @@ PouchDB Replication Stream
 
 [![Build Status](https://travis-ci.org/nolanlawson/pouchdb-replication-stream.svg)](https://travis-ci.org/nolanlawson/pouchdb-replication-stream)
 
-`ReadableStream`s and `WritableStream`s for PouchDB/CouchDB replication. 
+`ReadableStream`s and `WritableStream`s for PouchDB/CouchDB replication.
 
 Basically, you can replicate two databases by just attaching the streams together.
 
@@ -200,22 +200,25 @@ Promise.all([
 Dumping to a string
 ---
 
-You can use [`concat-stream`](https://github.com/maxogden/concat-stream) to read in the entire
+You can use [`MemoryStream`](https://github.com/JSBizon/node-memorystream) to read in the entire
 stream and dump it to a string.
+
+
 
 Example:
 
 ```js
 var PouchDB = require('pouchdb');
 var replicationStream = require('pouchdb-replication-stream');
-var concat = require('concat-stream');
+var MemoryStream = require('memorystream');
 
 PouchDB.plugin(replicationStream.plugin);
 PouchDB.adapter('writableStream', replicationStream.adapters.writableStream);
 
 var dumpedString = '';
-var stream = concat({encoding: 'string'}, function (line) {
-  dumpedString += line;
+var stream = new MemoryStream();
+stream.on('data', function(chunk) {
+  dumpedString += chunk.toString();
 });
 
 var db = new PouchDB('my_db');
@@ -227,24 +230,26 @@ db.dump(stream).then(function () {
 });
 ```
 
-This will also work in the browser via [Browserify](http://browserify.org/). If you aren't using Browserify, then you can download `concat-stream` from [https://wzrd.in/standalone/concat-stream@latest](https://wzrd.in/standalone/concat-stream@latest) and it will be available as `window.concatStream`.
+This will also work in the browser via [Browserify](http://browserify.org/).
+
+If you aren't using Browserify, then you can download `MemoryStream` from [https://wzrd.in/standalone/memorystream@latest](https://wzrd.in/standalone/memorystream@latest) and it will be available as `window.memorystream`.
 
 Example:
 
 ```html
 <script src="lib/pouchdb/dist/pouchdb.js"></script>
 <script src="lib/pouchdb-replication-stream/dist/pouchdb.replication-stream.js"></script>
-<script src="lib/concat-stream/concat-stream.js"></script>
+<script src="lib/memorystream/memorystream.js"></script>
 ```
 
 ```js
 var db = new PouchDB('my_db');
 
-var concat = window.concatStream;
+var MemoryStream = window.MemoryStream;
 
 var dumpedString = '';
-var stream = concat({encoding: 'string'}, function (line) {
-  dumpedString += line;
+stream.on('data', function(chunk) {
+  dumpedString += chunk.toString();
 });
 
 db.dump(stream).then(function () {
@@ -282,7 +287,7 @@ Testing
 This will run the tests in Node using LevelDB:
 
     npm test
-    
+
 You can also check for 100% code coverage using:
 
     npm run coverage

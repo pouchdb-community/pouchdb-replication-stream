@@ -209,10 +209,7 @@ function tests(dbName, dbType) {
       });
     });
 
-    it('should dump to a string', function () {
-
-      var MemoryStream = require('memorystream');
-
+    it('should dump and load using string', function () {
       var dumpedString = '';
       var readStream = new MemoryStream();
       readStream.on('data', function (chunk) {
@@ -223,9 +220,17 @@ function tests(dbName, dbType) {
         return db.dump(readStream);
       }).then(function () {
         dumpedString.should.be.a('string', 'got a string');
+
+        var writeStream = new MemoryStream();
+        writeStream.end(dumpedString);
+
+        return remote.load(writeStream);
+      }).then(function () {
+        return remote.allDocs();
+      }).then(function (docs) {
+        docs.rows.should.have.length(1);
+        docs.rows[0].id.should.equal('1');
       });
     });
-
   });
-
 }

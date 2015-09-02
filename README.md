@@ -272,6 +272,12 @@ One simple way to get around this error is to limit the globalAgent maxSockets, 
 require('http').globalAgent.maxSockets = 25;
 ```
 
+### Trying to speed up PouchDB replication?
+
+If you are using this library in the browser, then it's not going to speed up replication. The whole point is to minify the number of HTTP requests by collapsing replication into a stream, and then sending one big chunk down the wire to the client. If you use it on the client side, then it will still make many small requests to the server, which is slow.
+
+What you probably want is to use this library server-side, in a Node.js process. For a good example, see the Express wrapper: [express-pouchdb-replication-stream](https://github.com/conor-mac-aoidh/express-pouchdb-replication-stream).
+
 Building
 ----
     npm install

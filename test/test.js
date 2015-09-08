@@ -209,6 +209,23 @@ function tests(dbName, dbType) {
       });
     });
 
+    it('should dump to a string', function () {
+
+      var MemoryStream = require('memorystream');
+
+      var dumpedString = '';
+      var readStream = new MemoryStream();
+      readStream.on('data', function (chunk) {
+        dumpedString += chunk.toString();
+      });
+
+      return db.put({_id: '1'}).then(function () {
+        return db.dump(readStream);
+      }).then(function () {
+        dumpedString.should.be.a('string', 'got a string');
+      });
+    });
+
     it('should dump and load using string', function () {
       var dumpedString = '';
       var readStream = new MemoryStream();

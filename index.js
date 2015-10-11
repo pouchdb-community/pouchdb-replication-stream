@@ -106,7 +106,9 @@ exports.plugin.load = utils.toPromise(function (readableStream, opts, callback) 
   .pipe(this.createWriteStream({new_edits: false}))
   .on('error', callback)
   .on('finish', function () {
-    callback(null, {ok: true});
+    callback(null, {
+      ok: true
+    });
   });
 });
 

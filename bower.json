@@ -2,7 +2,7 @@
   "name": "pouchdb-replication-stream",
   "version": "1.2.4",
   "description": "PouchDB as a replication stream",
-  "main": "index.js",
+  "main": "dist/pouchdb.replication-stream.js",
   "homepage": "https://github.com/nolanlawson/pouchdb-replication-stream",
   "authors": [
     "Nolan Lawson <nolan.lawson@gmail.com>"

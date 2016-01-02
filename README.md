@@ -85,7 +85,22 @@ Load changes from the given `stream` into the `db`. Returns a Promise.
 
 This is an idempotent operation, so you can call it multiple times and it won't change the result.
 
-**Note:** Yes, there is a [pouchdb-load](https://github.com/nolanlawson/pouchdb-load) plugin that also has a `db.load()` API. It's not the same as this one, because I didn't expect anyone to try to use both plugins at the same time. If you are trying to do that, then [read this](https://github.com/nolanlawson/pouchdb-load/pull/7#issuecomment-67713908).
+#### Warning when using `pouchdb-load`
+
+The [pouchdb-load](https://github.com/nolanlawson/pouchdb-load) plugin has its own `db.load()`
+function, which is incompatible with this one. If you want to use both plugins at the same
+time, then you will need to do:
+
+```js
+var PouchDB = require('pouchdb');
+var load = require('pouchdb-load');
+PouchDB.plugin({
+  loadIt: load.load
+});
+// Then load `pouchdb-replication-stream` normally
+```
+
+Then you can use `pouchdb-load` via `db.loadIt()`, which will not clobber the `db.load()` from  this plugin. (You must use Browserify/Webpack, since there is no prebuilt `loadIt()` version.)
 
 Design
 ----

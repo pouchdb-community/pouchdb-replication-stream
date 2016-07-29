@@ -27,7 +27,7 @@
     "jshint": "jshint -c .jshintrc lib test/test.js",
     "test": "npm run jshint && ./bin/run-test.sh",
     "build": "mkdirp dist && npm run browserify && npm run min",
-    "browserify": "browserify . | ./bin/es3ify.js | derequire > dist/pouchdb.replication-stream.js",
+    "browserify": "browserify -p bundle-collapser/plugin -s PouchReplicationStream . | ./bin/es3ify.js | derequire > dist/pouchdb.replication-stream.js",
     "min": "uglifyjs dist/pouchdb.replication-stream.js -mc > dist/pouchdb.replication-stream.min.js",
     "dev": "browserify test/test.js > test/test-bundle.js && npm run dev-server",
     "dev-server": "./bin/dev-server.js",
@@ -45,6 +45,7 @@
   "devDependencies": {
     "bluebird": "^1.0.7",
     "browserify": "^11.2.0",
+    "bundle-collapser": "^1.2.1",
     "chai": "^3.3.0",
     "chai-as-promised": "^5.1.0",
     "derequire": "^2.0.0",

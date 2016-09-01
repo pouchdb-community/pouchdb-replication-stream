@@ -36,7 +36,6 @@ dbs.split(',').forEach(function (db) {
 });
 
 function tests(dbName, dbType) {
-
   var db;
   var remote;
   var out;
@@ -138,7 +137,6 @@ function tests(dbName, dbType) {
     });
 
     it('should replicate same _revs into the dest db', function () {
-
       var stream = new MemoryStream();
 
       return db.bulkDocs([
@@ -209,7 +207,6 @@ function tests(dbName, dbType) {
     });
 
     it('should dump to a string', function () {
-
       var MemoryStream = require('memorystream');
 
       var dumpedString = '';
@@ -247,6 +244,25 @@ function tests(dbName, dbType) {
         docs.rows.should.have.length(1);
         docs.rows[0].id.should.equal('1');
       });
+    });
+
+    it('should reject the promise when the source is not a stream', function () {
+      return remote
+        .load('foo')
+        .catch(function (err) {
+          err.should.be.a('error', 'TypeError: readableStream.pipe is not a function');
+        });
+    });
+
+    it('should reject the promise when the json is wrongly formatted', function () {
+      var writeStream = new MemoryStream();
+      writeStream.end('foo');
+
+      return remote
+        .load(writeStream)
+        .catch(function (err) {
+          err.should.be.a('error', 'Error: Could not parse row foo...');
+        });
     });
   });
 }

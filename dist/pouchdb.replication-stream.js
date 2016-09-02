@@ -2,7 +2,7 @@
 (function (process){
 'use strict';
 
-var Promise = _dereq_(25);
+var Promise = _dereq_(26);
 
 /* istanbul ignore next */
 exports.once = function (fun) {
@@ -79,11 +79,11 @@ exports.toPromise = function (func) {
 exports.inherits = _dereq_(14);
 
 }).call(this,_dereq_(28))
-},{"14":14,"25":25,"28":28}],2:[function(_dereq_,module,exports){
+},{"14":14,"26":26,"28":28}],2:[function(_dereq_,module,exports){
 (function (Buffer){
 'use strict';
 
-var through = _dereq_(57).obj;
+var through = _dereq_(58).obj;
 
 module.exports = function () {
   return through(function (chunk, _, next) {
@@ -98,23 +98,23 @@ module.exports = function () {
 };
 
 }).call(this,_dereq_(8).Buffer)
-},{"57":57,"8":8}],3:[function(_dereq_,module,exports){
+},{"58":58,"8":8}],3:[function(_dereq_,module,exports){
 'use strict';
 
-module.exports = _dereq_(62).version;
+module.exports = _dereq_(63).version;
 
-},{"62":62}],4:[function(_dereq_,module,exports){
+},{"63":63}],4:[function(_dereq_,module,exports){
 (function (process){
 'use strict';
 
 var utils = _dereq_(1);
-var Promise = _dereq_(25);
+var Promise = _dereq_(26);
 var ERROR_REV_CONFLICT = {
   status: 409,
   name: 'conflict',
   message: 'Document update conflict'
 };
-var ldj = _dereq_(17);
+var ndj = _dereq_(19);
 var ERROR_MISSING_DOC = {
   status: 404,
   name: 'not_found',
@@ -123,14 +123,14 @@ var ERROR_MISSING_DOC = {
 function WritableStreamPouch(opts, callback) {
   var api = this;
   api.instanceId = Math.random().toString();
-  api.ldj = ldj.serialize();
+  api.ndj = ndj.serialize();
   api.localStore = {};
   api.originalName = opts.name;
 
   // TODO: I would pass this in as a constructor opt, but
   // PouchDB changed how it clones in 5.0.0 so this broke
   api.setupStream = function (stream) {
-    api.ldj.pipe(stream);
+    api.ndj.pipe(stream);
   };
 
   /* istanbul ignore next */
@@ -149,7 +149,7 @@ function WritableStreamPouch(opts, callback) {
     if (opts.new_edits === false) {
       // assume we're only getting this with new_edits=false,
       // since this adapter is just a replication target
-      this.ldj.write({docs: docs}, function () {
+      this.ndj.write({docs: docs}, function () {
         callback(null, docs.map(function (doc) {
           return {
             ok: true,
@@ -177,7 +177,7 @@ function WritableStreamPouch(opts, callback) {
   };
 
   api._close = function (callback) {
-    this.ldj.end(callback);
+    this.ndj.end(callback);
   };
 
   api._getLocal = function (id, callback) {
@@ -222,7 +222,7 @@ function WritableStreamPouch(opts, callback) {
         };
         /* istanbul ignore else */
         if ('last_seq' in doc) {
-          self.ldj.write({seq: doc.last_seq}, done);
+          self.ndj.write({seq: doc.last_seq}, done);
         } else {
           done();
         }
@@ -268,7 +268,7 @@ WritableStreamPouch.valid = function () {
 module.exports = WritableStreamPouch;
 
 }).call(this,_dereq_(28))
-},{"1":1,"17":17,"25":25,"28":28}],5:[function(_dereq_,module,exports){
+},{"1":1,"19":19,"26":26,"28":28}],5:[function(_dereq_,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -2666,22 +2666,26 @@ if (typeof Object.create === 'function') {
 }
 
 },{}],15:[function(_dereq_,module,exports){
-/**
- * Determine if an object is Buffer
+/*!
+ * Determine if an object is a Buffer
  *
- * Author:   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
- * License:  MIT
- *
- * `npm install is-buffer`
+ * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+ * @license  MIT
  */
 
+// The _isBuffer check is for Safari 5-7 support, because it's missing
+// Object.prototype.constructor. Remove this eventually
 module.exports = function (obj) {
-  return !!(obj != null &&
-    (obj._isBuffer || // For Safari 5-7 (missing Object.prototype.constructor)
-      (obj.constructor &&
-      typeof obj.constructor.isBuffer === 'function' &&
-      obj.constructor.isBuffer(obj))
-    ))
+  return obj != null && (isBuffer(obj) || isSlowBuffer(obj) || !!obj._isBuffer)
+}
+
+function isBuffer (obj) {
+  return !!obj.constructor && typeof obj.constructor.isBuffer === 'function' && obj.constructor.isBuffer(obj)
+}
+
+// For Node v0.10 support. Remove this eventually.
+function isSlowBuffer (obj) {
+  return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
 },{}],16:[function(_dereq_,module,exports){
@@ -2690,884 +2694,6 @@ module.exports = Array.isArray || function (arr) {
 };
 
 },{}],17:[function(_dereq_,module,exports){
-var through = _dereq_(18)
-var split = _dereq_(36)
-var EOL = _dereq_(20).EOL
-
-module.exports = parse
-module.exports.serialize = serialize
-module.exports.parse = parse
-
-function parse(opts) {
-  opts = opts || {}
-  opts.strict = opts.strict !== false
-
-  function strict(row) {
-    if (row) return JSON.parse(row)
-  }
-
-  function nonStrict(row) {
-    try {
-      if (row) return JSON.parse(row)
-    } catch(e) {
-      // ignore
-    }
-  }
-
-  return opts.strict ? split(strict) : split(nonStrict)
-}
-
-function serialize() {
-  return through.obj(function(obj, enc, cb) {
-    cb(null, JSON.stringify(obj) + EOL)
-  })
-}
-
-},{"18":18,"20":20,"36":36}],18:[function(_dereq_,module,exports){
-(function (process){
-var Transform = _dereq_(35)
-  , inherits  = _dereq_(60).inherits
-  , xtend     = _dereq_(61)
-
-function DestroyableTransform(opts) {
-  Transform.call(this, opts)
-  this._destroyed = false
-}
-
-inherits(DestroyableTransform, Transform)
-
-DestroyableTransform.prototype.destroy = function(err) {
-  if (this._destroyed) return
-  this._destroyed = true
-  
-  var self = this
-  process.nextTick(function() {
-    if (err)
-      self.emit('error', err)
-    self.emit('close')
-  })
-}
-
-// a noop _transform function
-function noop (chunk, enc, callback) {
-  callback(null, chunk)
-}
-
-
-// create a new export function, used by both the main export and
-// the .ctor export, contains common logic for dealing with arguments
-function through2 (construct) {
-  return function (options, transform, flush) {
-    if (typeof options == 'function') {
-      flush     = transform
-      transform = options
-      options   = {}
-    }
-
-    if (typeof transform != 'function')
-      transform = noop
-
-    if (typeof flush != 'function')
-      flush = null
-
-    return construct(options, transform, flush)
-  }
-}
-
-
-// main export, just make me a transform stream!
-module.exports = through2(function (options, transform, flush) {
-  var t2 = new DestroyableTransform(options)
-
-  t2._transform = transform
-
-  if (flush)
-    t2._flush = flush
-
-  return t2
-})
-
-
-// make me a reusable prototype that I can `new`, or implicitly `new`
-// with a constructor call
-module.exports.ctor = through2(function (options, transform, flush) {
-  function Through2 (override) {
-    if (!(this instanceof Through2))
-      return new Through2(override)
-
-    this.options = xtend(options, override)
-
-    DestroyableTransform.call(this, this.options)
-  }
-
-  inherits(Through2, DestroyableTransform)
-
-  Through2.prototype._transform = transform
-
-  if (flush)
-    Through2.prototype._flush = flush
-
-  return Through2
-})
-
-
-module.exports.obj = through2(function (options, transform, flush) {
-  var t2 = new DestroyableTransform(xtend({ objectMode: true, highWaterMark: 16 }, options))
-
-  t2._transform = transform
-
-  if (flush)
-    t2._flush = flush
-
-  return t2
-})
-
-}).call(this,_dereq_(28))
-},{"28":28,"35":35,"60":60,"61":61}],19:[function(_dereq_,module,exports){
-(function (global){
-/**
- * lodash (Custom Build) <https://lodash.com/>
- * Build: `lodash modularize exports="npm" -o ./`
- * Copyright jQuery Foundation and other contributors <https://jquery.org/>
- * Released under MIT license <https://lodash.com/license>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- */
-
-/** Used as references for various `Number` constants. */
-var INFINITY = 1 / 0,
-    MAX_SAFE_INTEGER = 9007199254740991;
-
-/** `Object#toString` result references. */
-var argsTag = '[object Arguments]',
-    funcTag = '[object Function]',
-    genTag = '[object GeneratorFunction]',
-    symbolTag = '[object Symbol]';
-
-/** Detect free variable `global` from Node.js. */
-var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
-
-/** Detect free variable `self`. */
-var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
-
-/** Used as a reference to the global object. */
-var root = freeGlobal || freeSelf || Function('return this')();
-
-/**
- * A faster alternative to `Function#apply`, this function invokes `func`
- * with the `this` binding of `thisArg` and the arguments of `args`.
- *
- * @private
- * @param {Function} func The function to invoke.
- * @param {*} thisArg The `this` binding of `func`.
- * @param {Array} args The arguments to invoke `func` with.
- * @returns {*} Returns the result of `func`.
- */
-function apply(func, thisArg, args) {
-  switch (args.length) {
-    case 0: return func.call(thisArg);
-    case 1: return func.call(thisArg, args[0]);
-    case 2: return func.call(thisArg, args[0], args[1]);
-    case 3: return func.call(thisArg, args[0], args[1], args[2]);
-  }
-  return func.apply(thisArg, args);
-}
-
-/**
- * A specialized version of `_.map` for arrays without support for iteratee
- * shorthands.
- *
- * @private
- * @param {Array} [array] The array to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @returns {Array} Returns the new mapped array.
- */
-function arrayMap(array, iteratee) {
-  var index = -1,
-      length = array ? array.length : 0,
-      result = Array(length);
-
-  while (++index < length) {
-    result[index] = iteratee(array[index], index, array);
-  }
-  return result;
-}
-
-/**
- * Appends the elements of `values` to `array`.
- *
- * @private
- * @param {Array} array The array to modify.
- * @param {Array} values The values to append.
- * @returns {Array} Returns `array`.
- */
-function arrayPush(array, values) {
-  var index = -1,
-      length = values.length,
-      offset = array.length;
-
-  while (++index < length) {
-    array[offset + index] = values[index];
-  }
-  return array;
-}
-
-/**
- * The base implementation of `_.property` without support for deep paths.
- *
- * @private
- * @param {string} key The key of the property to get.
- * @returns {Function} Returns the new accessor function.
- */
-function baseProperty(key) {
-  return function(object) {
-    return object == null ? undefined : object[key];
-  };
-}
-
-/** Used for built-in method references. */
-var objectProto = Object.prototype;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty = objectProto.hasOwnProperty;
-
-/**
- * Used to resolve the
- * [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
- * of values.
- */
-var objectToString = objectProto.toString;
-
-/** Built-in value references. */
-var Symbol = root.Symbol,
-    propertyIsEnumerable = objectProto.propertyIsEnumerable,
-    spreadableSymbol = Symbol ? Symbol.isConcatSpreadable : undefined;
-
-/* Built-in method references for those with the same name as other `lodash` methods. */
-var nativeMax = Math.max;
-
-/**
- * The base implementation of `_.flatten` with support for restricting flattening.
- *
- * @private
- * @param {Array} array The array to flatten.
- * @param {number} depth The maximum recursion depth.
- * @param {boolean} [predicate=isFlattenable] The function invoked per iteration.
- * @param {boolean} [isStrict] Restrict to values that pass `predicate` checks.
- * @param {Array} [result=[]] The initial result value.
- * @returns {Array} Returns the new flattened array.
- */
-function baseFlatten(array, depth, predicate, isStrict, result) {
-  var index = -1,
-      length = array.length;
-
-  predicate || (predicate = isFlattenable);
-  result || (result = []);
-
-  while (++index < length) {
-    var value = array[index];
-    if (depth > 0 && predicate(value)) {
-      if (depth > 1) {
-        // Recursively flatten arrays (susceptible to call stack limits).
-        baseFlatten(value, depth - 1, predicate, isStrict, result);
-      } else {
-        arrayPush(result, value);
-      }
-    } else if (!isStrict) {
-      result[result.length] = value;
-    }
-  }
-  return result;
-}
-
-/**
- * The base implementation of `_.pick` without support for individual
- * property identifiers.
- *
- * @private
- * @param {Object} object The source object.
- * @param {string[]} props The property identifiers to pick.
- * @returns {Object} Returns the new object.
- */
-function basePick(object, props) {
-  object = Object(object);
-  return basePickBy(object, props, function(value, key) {
-    return key in object;
-  });
-}
-
-/**
- * The base implementation of  `_.pickBy` without support for iteratee shorthands.
- *
- * @private
- * @param {Object} object The source object.
- * @param {string[]} props The property identifiers to pick from.
- * @param {Function} predicate The function invoked per property.
- * @returns {Object} Returns the new object.
- */
-function basePickBy(object, props, predicate) {
-  var index = -1,
-      length = props.length,
-      result = {};
-
-  while (++index < length) {
-    var key = props[index],
-        value = object[key];
-
-    if (predicate(value, key)) {
-      result[key] = value;
-    }
-  }
-  return result;
-}
-
-/**
- * The base implementation of `_.rest` which doesn't validate or coerce arguments.
- *
- * @private
- * @param {Function} func The function to apply a rest parameter to.
- * @param {number} [start=func.length-1] The start position of the rest parameter.
- * @returns {Function} Returns the new function.
- */
-function baseRest(func, start) {
-  start = nativeMax(start === undefined ? (func.length - 1) : start, 0);
-  return function() {
-    var args = arguments,
-        index = -1,
-        length = nativeMax(args.length - start, 0),
-        array = Array(length);
-
-    while (++index < length) {
-      array[index] = args[start + index];
-    }
-    index = -1;
-    var otherArgs = Array(start + 1);
-    while (++index < start) {
-      otherArgs[index] = args[index];
-    }
-    otherArgs[start] = array;
-    return apply(func, this, otherArgs);
-  };
-}
-
-/**
- * Gets the "length" property value of `object`.
- *
- * **Note:** This function is used to avoid a
- * [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792) that affects
- * Safari on at least iOS 8.1-8.3 ARM64.
- *
- * @private
- * @param {Object} object The object to query.
- * @returns {*} Returns the "length" value.
- */
-var getLength = baseProperty('length');
-
-/**
- * Checks if `value` is a flattenable `arguments` object or array.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is flattenable, else `false`.
- */
-function isFlattenable(value) {
-  return isArray(value) || isArguments(value) ||
-    !!(spreadableSymbol && value && value[spreadableSymbol])
-}
-
-/**
- * Converts `value` to a string key if it's not a string or symbol.
- *
- * @private
- * @param {*} value The value to inspect.
- * @returns {string|symbol} Returns the key.
- */
-function toKey(value) {
-  if (typeof value == 'string' || isSymbol(value)) {
-    return value;
-  }
-  var result = (value + '');
-  return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
-}
-
-/**
- * Checks if `value` is likely an `arguments` object.
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an `arguments` object,
- *  else `false`.
- * @example
- *
- * _.isArguments(function() { return arguments; }());
- * // => true
- *
- * _.isArguments([1, 2, 3]);
- * // => false
- */
-function isArguments(value) {
-  // Safari 8.1 incorrectly makes `arguments.callee` enumerable in strict mode.
-  return isArrayLikeObject(value) && hasOwnProperty.call(value, 'callee') &&
-    (!propertyIsEnumerable.call(value, 'callee') || objectToString.call(value) == argsTag);
-}
-
-/**
- * Checks if `value` is classified as an `Array` object.
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an array, else `false`.
- * @example
- *
- * _.isArray([1, 2, 3]);
- * // => true
- *
- * _.isArray(document.body.children);
- * // => false
- *
- * _.isArray('abc');
- * // => false
- *
- * _.isArray(_.noop);
- * // => false
- */
-var isArray = Array.isArray;
-
-/**
- * Checks if `value` is array-like. A value is considered array-like if it's
- * not a function and has a `value.length` that's an integer greater than or
- * equal to `0` and less than or equal to `Number.MAX_SAFE_INTEGER`.
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
- * @example
- *
- * _.isArrayLike([1, 2, 3]);
- * // => true
- *
- * _.isArrayLike(document.body.children);
- * // => true
- *
- * _.isArrayLike('abc');
- * // => true
- *
- * _.isArrayLike(_.noop);
- * // => false
- */
-function isArrayLike(value) {
-  return value != null && isLength(getLength(value)) && !isFunction(value);
-}
-
-/**
- * This method is like `_.isArrayLike` except that it also checks if `value`
- * is an object.
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an array-like object,
- *  else `false`.
- * @example
- *
- * _.isArrayLikeObject([1, 2, 3]);
- * // => true
- *
- * _.isArrayLikeObject(document.body.children);
- * // => true
- *
- * _.isArrayLikeObject('abc');
- * // => false
- *
- * _.isArrayLikeObject(_.noop);
- * // => false
- */
-function isArrayLikeObject(value) {
-  return isObjectLike(value) && isArrayLike(value);
-}
-
-/**
- * Checks if `value` is classified as a `Function` object.
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a function, else `false`.
- * @example
- *
- * _.isFunction(_);
- * // => true
- *
- * _.isFunction(/abc/);
- * // => false
- */
-function isFunction(value) {
-  // The use of `Object#toString` avoids issues with the `typeof` operator
-  // in Safari 8 which returns 'object' for typed array and weak map constructors,
-  // and PhantomJS 1.9 which returns 'function' for `NodeList` instances.
-  var tag = isObject(value) ? objectToString.call(value) : '';
-  return tag == funcTag || tag == genTag;
-}
-
-/**
- * Checks if `value` is a valid array-like length.
- *
- * **Note:** This function is loosely based on
- * [`ToLength`](http://ecma-international.org/ecma-262/6.0/#sec-tolength).
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a valid length,
- *  else `false`.
- * @example
- *
- * _.isLength(3);
- * // => true
- *
- * _.isLength(Number.MIN_VALUE);
- * // => false
- *
- * _.isLength(Infinity);
- * // => false
- *
- * _.isLength('3');
- * // => false
- */
-function isLength(value) {
-  return typeof value == 'number' &&
-    value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-}
-
-/**
- * Checks if `value` is the
- * [language type](http://www.ecma-international.org/ecma-262/6.0/#sec-ecmascript-language-types)
- * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(_.noop);
- * // => true
- *
- * _.isObject(null);
- * // => false
- */
-function isObject(value) {
-  var type = typeof value;
-  return !!value && (type == 'object' || type == 'function');
-}
-
-/**
- * Checks if `value` is object-like. A value is object-like if it's not `null`
- * and has a `typeof` result of "object".
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
- * @example
- *
- * _.isObjectLike({});
- * // => true
- *
- * _.isObjectLike([1, 2, 3]);
- * // => true
- *
- * _.isObjectLike(_.noop);
- * // => false
- *
- * _.isObjectLike(null);
- * // => false
- */
-function isObjectLike(value) {
-  return !!value && typeof value == 'object';
-}
-
-/**
- * Checks if `value` is classified as a `Symbol` primitive or object.
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a symbol, else `false`.
- * @example
- *
- * _.isSymbol(Symbol.iterator);
- * // => true
- *
- * _.isSymbol('abc');
- * // => false
- */
-function isSymbol(value) {
-  return typeof value == 'symbol' ||
-    (isObjectLike(value) && objectToString.call(value) == symbolTag);
-}
-
-/**
- * Creates an object composed of the picked `object` properties.
- *
- * @static
- * @since 0.1.0
- * @memberOf _
- * @category Object
- * @param {Object} object The source object.
- * @param {...(string|string[])} [props] The property identifiers to pick.
- * @returns {Object} Returns the new object.
- * @example
- *
- * var object = { 'a': 1, 'b': '2', 'c': 3 };
- *
- * _.pick(object, ['a', 'c']);
- * // => { 'a': 1, 'c': 3 }
- */
-var pick = baseRest(function(object, props) {
-  return object == null ? {} : basePick(object, arrayMap(baseFlatten(props, 1), toKey));
-});
-
-module.exports = pick;
-
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],20:[function(_dereq_,module,exports){
-exports.endianness = function () { return 'LE' };
-
-exports.hostname = function () {
-    if (typeof location !== 'undefined') {
-        return location.hostname
-    }
-    else return '';
-};
-
-exports.loadavg = function () { return [] };
-
-exports.uptime = function () { return 0 };
-
-exports.freemem = function () {
-    return Number.MAX_VALUE;
-};
-
-exports.totalmem = function () {
-    return Number.MAX_VALUE;
-};
-
-exports.cpus = function () { return [] };
-
-exports.type = function () { return 'Browser' };
-
-exports.release = function () {
-    if (typeof navigator !== 'undefined') {
-        return navigator.appVersion;
-    }
-    return '';
-};
-
-exports.networkInterfaces
-= exports.getNetworkInterfaces
-= function () { return {} };
-
-exports.arch = function () { return 'javascript' };
-
-exports.platform = function () { return 'browser' };
-
-exports.tmpdir = exports.tmpDir = function () {
-    return '/tmp';
-};
-
-exports.EOL = '\n';
-
-},{}],21:[function(_dereq_,module,exports){
-'use strict';
-module.exports = function (source, target, events) {
-  source.on('newListener', function (event, listener) {
-    if (~events.indexOf(event)) {
-      target.on(event, listener);
-    }
-  });
-  source.on('removeListener', function (event, listener) {
-    if (~events.indexOf(event)) {
-      target.removeListener(event, listener);
-    }
-  });
-};
-
-},{}],22:[function(_dereq_,module,exports){
-'use strict';
-var Writable = _dereq_(24);
-var Readable = _dereq_(23);
-
-exports.createReadStream = function (opts) {
-  opts = opts || {};
-  return new Readable(this, opts);
-};
-exports.createWriteStream = function (opts) {
-  opts = opts || {};
-  return new Writable(this, opts);
-};
-var ep = _dereq_(21);
-var streamEvents = [
-  'drain',
-  'pipe',
-  'unpipe',
-  'error'
-];
-exports.write = function (chunk, encoding, callback) {
-  if (!this.__stream) {
-    this.__stream = new Writable(this);
-    ep(this, this.__stream, streamEvents);
-    this.on('destroy', function () {
-      this.__stream.end();
-    });
-  }
-  return this.__stream.write(chunk, encoding, callback);
-};
-exports.end = function () {
-  this.emit('done');
-};
-
-},{"21":21,"23":23,"24":24}],23:[function(_dereq_,module,exports){
-'use strict';
-var inherits = _dereq_(14);
-var Readable = _dereq_(34).Readable;
-
-module.exports = ReadStream;
-inherits(ReadStream, Readable);
-
-function ReadStream(db, opts) {
-  if (!(this instanceof ReadStream)) {
-    return new ReadStream(db, opts);
-  }
-  Readable.call(this, {
-    objectMode: true
-  });
-  opts = opts || {};
-  var thisOpts = this.opts = {
-    since: 0
-  };
-  Object.keys(opts).forEach(function (key) {
-    thisOpts[key] = opts[key];
-  });
-  this.opts.returnDocs = false;
-  this.last = opts.since;
-  this.db = db;
-  this.changes = void 0;
-  this.canceled = false;
-}
-ReadStream.prototype._read = function () {
-  if (this.changes) {
-    return;
-  }
-  var self = this;
-  this.opts.since = this.last;
-  this.changes = this.db.changes(this.opts).on('complete', function (resp) {
-    self.cancel = function () {};
-    if (!resp.canceled) {
-      self.push(null);
-    }
-  });
-  this.changes.on('change', function (change) {
-    self.last = change.seq;
-    var more = self.push(change);
-    if (!more) {
-      self.changes.cancel();
-    }
-  });
-};
-ReadStream.prototype.cancel = function () {
-  this.canceled = true;
-  if (this.changes && typeof this.changes.cancel === 'function') {
-    return this.changes.cancel();
-  }
-};
-
-},{"14":14,"34":34}],24:[function(_dereq_,module,exports){
-(function (Buffer){
-'use strict';
-var inherits = _dereq_(14);
-var Writable = _dereq_(34).Writable;
-
-module.exports = WriteStream;
-inherits(WriteStream, Writable);
-
-function WriteStream(db, opts) {
-  if (!(this instanceof WriteStream)) {
-    return new WriteStream(db);
-  }
-  Writable.call(this, {
-    objectMode: true
-  });
-  this.db = db;
-  this.opts = opts || {};
-}
-
-WriteStream.prototype._write = function (chunk, _, next) {
-  if (Buffer.isBuffer(chunk)) {
-    chunk = chunk.toString();
-  }
-  if (typeof chunk === 'string') {
-    try {
-      chunk = JSON.parse(chunk);
-    } catch (e) {
-      return next(e);
-    }
-  }
-  if (Array.isArray(chunk)) {
-    this.db.bulkDocs({docs: chunk}, this.opts).then(function () {
-      next();
-    }, next);
-  } else if ('_id' in chunk) {
-    this.db.put(chunk, this.opts).then(function () {
-      next();
-    }, next);
-  } else {
-    this.db.post(chunk, this.opts).then(function () {
-      next();
-    }, next);
-  }
-};
-
-}).call(this,{"isBuffer":_dereq_(15)})
-},{"14":14,"15":15,"34":34}],25:[function(_dereq_,module,exports){
-'use strict';
-
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
-
-var lie = _interopDefault(_dereq_(26));
-
-/* istanbul ignore next */
-var PouchPromise = typeof Promise === 'function' ? Promise : lie;
-
-module.exports = PouchPromise;
-},{"26":26}],26:[function(_dereq_,module,exports){
 'use strict';
 var immediate = _dereq_(13);
 
@@ -3822,7 +2948,855 @@ function race(iterable) {
   }
 }
 
-},{"13":13}],27:[function(_dereq_,module,exports){
+},{"13":13}],18:[function(_dereq_,module,exports){
+(function (global){
+/**
+ * lodash (Custom Build) <https://lodash.com/>
+ * Build: `lodash modularize exports="npm" -o ./`
+ * Copyright jQuery Foundation and other contributors <https://jquery.org/>
+ * Released under MIT license <https://lodash.com/license>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ */
+
+/** Used as references for various `Number` constants. */
+var INFINITY = 1 / 0,
+    MAX_SAFE_INTEGER = 9007199254740991;
+
+/** `Object#toString` result references. */
+var argsTag = '[object Arguments]',
+    funcTag = '[object Function]',
+    genTag = '[object GeneratorFunction]',
+    symbolTag = '[object Symbol]';
+
+/** Detect free variable `global` from Node.js. */
+var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
+
+/** Detect free variable `self`. */
+var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
+
+/** Used as a reference to the global object. */
+var root = freeGlobal || freeSelf || Function('return this')();
+
+/**
+ * A faster alternative to `Function#apply`, this function invokes `func`
+ * with the `this` binding of `thisArg` and the arguments of `args`.
+ *
+ * @private
+ * @param {Function} func The function to invoke.
+ * @param {*} thisArg The `this` binding of `func`.
+ * @param {Array} args The arguments to invoke `func` with.
+ * @returns {*} Returns the result of `func`.
+ */
+function apply(func, thisArg, args) {
+  switch (args.length) {
+    case 0: return func.call(thisArg);
+    case 1: return func.call(thisArg, args[0]);
+    case 2: return func.call(thisArg, args[0], args[1]);
+    case 3: return func.call(thisArg, args[0], args[1], args[2]);
+  }
+  return func.apply(thisArg, args);
+}
+
+/**
+ * A specialized version of `_.map` for arrays without support for iteratee
+ * shorthands.
+ *
+ * @private
+ * @param {Array} [array] The array to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @returns {Array} Returns the new mapped array.
+ */
+function arrayMap(array, iteratee) {
+  var index = -1,
+      length = array ? array.length : 0,
+      result = Array(length);
+
+  while (++index < length) {
+    result[index] = iteratee(array[index], index, array);
+  }
+  return result;
+}
+
+/**
+ * Appends the elements of `values` to `array`.
+ *
+ * @private
+ * @param {Array} array The array to modify.
+ * @param {Array} values The values to append.
+ * @returns {Array} Returns `array`.
+ */
+function arrayPush(array, values) {
+  var index = -1,
+      length = values.length,
+      offset = array.length;
+
+  while (++index < length) {
+    array[offset + index] = values[index];
+  }
+  return array;
+}
+
+/** Used for built-in method references. */
+var objectProto = Object.prototype;
+
+/** Used to check objects for own properties. */
+var hasOwnProperty = objectProto.hasOwnProperty;
+
+/**
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var objectToString = objectProto.toString;
+
+/** Built-in value references. */
+var Symbol = root.Symbol,
+    propertyIsEnumerable = objectProto.propertyIsEnumerable,
+    spreadableSymbol = Symbol ? Symbol.isConcatSpreadable : undefined;
+
+/* Built-in method references for those with the same name as other `lodash` methods. */
+var nativeMax = Math.max;
+
+/**
+ * The base implementation of `_.flatten` with support for restricting flattening.
+ *
+ * @private
+ * @param {Array} array The array to flatten.
+ * @param {number} depth The maximum recursion depth.
+ * @param {boolean} [predicate=isFlattenable] The function invoked per iteration.
+ * @param {boolean} [isStrict] Restrict to values that pass `predicate` checks.
+ * @param {Array} [result=[]] The initial result value.
+ * @returns {Array} Returns the new flattened array.
+ */
+function baseFlatten(array, depth, predicate, isStrict, result) {
+  var index = -1,
+      length = array.length;
+
+  predicate || (predicate = isFlattenable);
+  result || (result = []);
+
+  while (++index < length) {
+    var value = array[index];
+    if (depth > 0 && predicate(value)) {
+      if (depth > 1) {
+        // Recursively flatten arrays (susceptible to call stack limits).
+        baseFlatten(value, depth - 1, predicate, isStrict, result);
+      } else {
+        arrayPush(result, value);
+      }
+    } else if (!isStrict) {
+      result[result.length] = value;
+    }
+  }
+  return result;
+}
+
+/**
+ * The base implementation of `_.pick` without support for individual
+ * property identifiers.
+ *
+ * @private
+ * @param {Object} object The source object.
+ * @param {string[]} props The property identifiers to pick.
+ * @returns {Object} Returns the new object.
+ */
+function basePick(object, props) {
+  object = Object(object);
+  return basePickBy(object, props, function(value, key) {
+    return key in object;
+  });
+}
+
+/**
+ * The base implementation of  `_.pickBy` without support for iteratee shorthands.
+ *
+ * @private
+ * @param {Object} object The source object.
+ * @param {string[]} props The property identifiers to pick from.
+ * @param {Function} predicate The function invoked per property.
+ * @returns {Object} Returns the new object.
+ */
+function basePickBy(object, props, predicate) {
+  var index = -1,
+      length = props.length,
+      result = {};
+
+  while (++index < length) {
+    var key = props[index],
+        value = object[key];
+
+    if (predicate(value, key)) {
+      result[key] = value;
+    }
+  }
+  return result;
+}
+
+/**
+ * The base implementation of `_.rest` which doesn't validate or coerce arguments.
+ *
+ * @private
+ * @param {Function} func The function to apply a rest parameter to.
+ * @param {number} [start=func.length-1] The start position of the rest parameter.
+ * @returns {Function} Returns the new function.
+ */
+function baseRest(func, start) {
+  start = nativeMax(start === undefined ? (func.length - 1) : start, 0);
+  return function() {
+    var args = arguments,
+        index = -1,
+        length = nativeMax(args.length - start, 0),
+        array = Array(length);
+
+    while (++index < length) {
+      array[index] = args[start + index];
+    }
+    index = -1;
+    var otherArgs = Array(start + 1);
+    while (++index < start) {
+      otherArgs[index] = args[index];
+    }
+    otherArgs[start] = array;
+    return apply(func, this, otherArgs);
+  };
+}
+
+/**
+ * Checks if `value` is a flattenable `arguments` object or array.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is flattenable, else `false`.
+ */
+function isFlattenable(value) {
+  return isArray(value) || isArguments(value) ||
+    !!(spreadableSymbol && value && value[spreadableSymbol]);
+}
+
+/**
+ * Converts `value` to a string key if it's not a string or symbol.
+ *
+ * @private
+ * @param {*} value The value to inspect.
+ * @returns {string|symbol} Returns the key.
+ */
+function toKey(value) {
+  if (typeof value == 'string' || isSymbol(value)) {
+    return value;
+  }
+  var result = (value + '');
+  return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
+}
+
+/**
+ * Checks if `value` is likely an `arguments` object.
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an `arguments` object,
+ *  else `false`.
+ * @example
+ *
+ * _.isArguments(function() { return arguments; }());
+ * // => true
+ *
+ * _.isArguments([1, 2, 3]);
+ * // => false
+ */
+function isArguments(value) {
+  // Safari 8.1 makes `arguments.callee` enumerable in strict mode.
+  return isArrayLikeObject(value) && hasOwnProperty.call(value, 'callee') &&
+    (!propertyIsEnumerable.call(value, 'callee') || objectToString.call(value) == argsTag);
+}
+
+/**
+ * Checks if `value` is classified as an `Array` object.
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an array, else `false`.
+ * @example
+ *
+ * _.isArray([1, 2, 3]);
+ * // => true
+ *
+ * _.isArray(document.body.children);
+ * // => false
+ *
+ * _.isArray('abc');
+ * // => false
+ *
+ * _.isArray(_.noop);
+ * // => false
+ */
+var isArray = Array.isArray;
+
+/**
+ * Checks if `value` is array-like. A value is considered array-like if it's
+ * not a function and has a `value.length` that's an integer greater than or
+ * equal to `0` and less than or equal to `Number.MAX_SAFE_INTEGER`.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
+ * @example
+ *
+ * _.isArrayLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isArrayLike(document.body.children);
+ * // => true
+ *
+ * _.isArrayLike('abc');
+ * // => true
+ *
+ * _.isArrayLike(_.noop);
+ * // => false
+ */
+function isArrayLike(value) {
+  return value != null && isLength(value.length) && !isFunction(value);
+}
+
+/**
+ * This method is like `_.isArrayLike` except that it also checks if `value`
+ * is an object.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an array-like object,
+ *  else `false`.
+ * @example
+ *
+ * _.isArrayLikeObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isArrayLikeObject(document.body.children);
+ * // => true
+ *
+ * _.isArrayLikeObject('abc');
+ * // => false
+ *
+ * _.isArrayLikeObject(_.noop);
+ * // => false
+ */
+function isArrayLikeObject(value) {
+  return isObjectLike(value) && isArrayLike(value);
+}
+
+/**
+ * Checks if `value` is classified as a `Function` object.
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a function, else `false`.
+ * @example
+ *
+ * _.isFunction(_);
+ * // => true
+ *
+ * _.isFunction(/abc/);
+ * // => false
+ */
+function isFunction(value) {
+  // The use of `Object#toString` avoids issues with the `typeof` operator
+  // in Safari 8-9 which returns 'object' for typed array and other constructors.
+  var tag = isObject(value) ? objectToString.call(value) : '';
+  return tag == funcTag || tag == genTag;
+}
+
+/**
+ * Checks if `value` is a valid array-like length.
+ *
+ * **Note:** This method is loosely based on
+ * [`ToLength`](http://ecma-international.org/ecma-262/7.0/#sec-tolength).
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+ * @example
+ *
+ * _.isLength(3);
+ * // => true
+ *
+ * _.isLength(Number.MIN_VALUE);
+ * // => false
+ *
+ * _.isLength(Infinity);
+ * // => false
+ *
+ * _.isLength('3');
+ * // => false
+ */
+function isLength(value) {
+  return typeof value == 'number' &&
+    value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+}
+
+/**
+ * Checks if `value` is the
+ * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
+ * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(_.noop);
+ * // => true
+ *
+ * _.isObject(null);
+ * // => false
+ */
+function isObject(value) {
+  var type = typeof value;
+  return !!value && (type == 'object' || type == 'function');
+}
+
+/**
+ * Checks if `value` is object-like. A value is object-like if it's not `null`
+ * and has a `typeof` result of "object".
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+ * @example
+ *
+ * _.isObjectLike({});
+ * // => true
+ *
+ * _.isObjectLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isObjectLike(_.noop);
+ * // => false
+ *
+ * _.isObjectLike(null);
+ * // => false
+ */
+function isObjectLike(value) {
+  return !!value && typeof value == 'object';
+}
+
+/**
+ * Checks if `value` is classified as a `Symbol` primitive or object.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a symbol, else `false`.
+ * @example
+ *
+ * _.isSymbol(Symbol.iterator);
+ * // => true
+ *
+ * _.isSymbol('abc');
+ * // => false
+ */
+function isSymbol(value) {
+  return typeof value == 'symbol' ||
+    (isObjectLike(value) && objectToString.call(value) == symbolTag);
+}
+
+/**
+ * Creates an object composed of the picked `object` properties.
+ *
+ * @static
+ * @since 0.1.0
+ * @memberOf _
+ * @category Object
+ * @param {Object} object The source object.
+ * @param {...(string|string[])} [props] The property identifiers to pick.
+ * @returns {Object} Returns the new object.
+ * @example
+ *
+ * var object = { 'a': 1, 'b': '2', 'c': 3 };
+ *
+ * _.pick(object, ['a', 'c']);
+ * // => { 'a': 1, 'c': 3 }
+ */
+var pick = baseRest(function(object, props) {
+  return object == null ? {} : basePick(object, arrayMap(baseFlatten(props, 1), toKey));
+});
+
+module.exports = pick;
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],19:[function(_dereq_,module,exports){
+var through = _dereq_(20)
+var split = _dereq_(36)
+var EOL = _dereq_(21).EOL
+
+module.exports = parse
+module.exports.serialize = module.exports.stringify = serialize
+module.exports.parse = parse
+
+function parse (opts) {
+  opts = opts || {}
+  opts.strict = opts.strict !== false
+
+  function parseRow (row) {
+    try {
+      if (row) return JSON.parse(row)
+    } catch (e) {
+      if (opts.strict) {
+        this.emit('error', new Error('Could not parse row ' + row.slice(0, 50) + '...'))
+      }
+    }
+  }
+
+  return split(parseRow)
+}
+
+function serialize (opts) {
+  return through.obj(opts, function(obj, enc, cb) {
+    cb(null, JSON.stringify(obj) + EOL)
+  })
+}
+
+},{"20":20,"21":21,"36":36}],20:[function(_dereq_,module,exports){
+(function (process){
+var Transform = _dereq_(35)
+  , inherits  = _dereq_(61).inherits
+  , xtend     = _dereq_(62)
+
+function DestroyableTransform(opts) {
+  Transform.call(this, opts)
+  this._destroyed = false
+}
+
+inherits(DestroyableTransform, Transform)
+
+DestroyableTransform.prototype.destroy = function(err) {
+  if (this._destroyed) return
+  this._destroyed = true
+  
+  var self = this
+  process.nextTick(function() {
+    if (err)
+      self.emit('error', err)
+    self.emit('close')
+  })
+}
+
+// a noop _transform function
+function noop (chunk, enc, callback) {
+  callback(null, chunk)
+}
+
+
+// create a new export function, used by both the main export and
+// the .ctor export, contains common logic for dealing with arguments
+function through2 (construct) {
+  return function (options, transform, flush) {
+    if (typeof options == 'function') {
+      flush     = transform
+      transform = options
+      options   = {}
+    }
+
+    if (typeof transform != 'function')
+      transform = noop
+
+    if (typeof flush != 'function')
+      flush = null
+
+    return construct(options, transform, flush)
+  }
+}
+
+
+// main export, just make me a transform stream!
+module.exports = through2(function (options, transform, flush) {
+  var t2 = new DestroyableTransform(options)
+
+  t2._transform = transform
+
+  if (flush)
+    t2._flush = flush
+
+  return t2
+})
+
+
+// make me a reusable prototype that I can `new`, or implicitly `new`
+// with a constructor call
+module.exports.ctor = through2(function (options, transform, flush) {
+  function Through2 (override) {
+    if (!(this instanceof Through2))
+      return new Through2(override)
+
+    this.options = xtend(options, override)
+
+    DestroyableTransform.call(this, this.options)
+  }
+
+  inherits(Through2, DestroyableTransform)
+
+  Through2.prototype._transform = transform
+
+  if (flush)
+    Through2.prototype._flush = flush
+
+  return Through2
+})
+
+
+module.exports.obj = through2(function (options, transform, flush) {
+  var t2 = new DestroyableTransform(xtend({ objectMode: true, highWaterMark: 16 }, options))
+
+  t2._transform = transform
+
+  if (flush)
+    t2._flush = flush
+
+  return t2
+})
+
+}).call(this,_dereq_(28))
+},{"28":28,"35":35,"61":61,"62":62}],21:[function(_dereq_,module,exports){
+exports.endianness = function () { return 'LE' };
+
+exports.hostname = function () {
+    if (typeof location !== 'undefined') {
+        return location.hostname
+    }
+    else return '';
+};
+
+exports.loadavg = function () { return [] };
+
+exports.uptime = function () { return 0 };
+
+exports.freemem = function () {
+    return Number.MAX_VALUE;
+};
+
+exports.totalmem = function () {
+    return Number.MAX_VALUE;
+};
+
+exports.cpus = function () { return [] };
+
+exports.type = function () { return 'Browser' };
+
+exports.release = function () {
+    if (typeof navigator !== 'undefined') {
+        return navigator.appVersion;
+    }
+    return '';
+};
+
+exports.networkInterfaces
+= exports.getNetworkInterfaces
+= function () { return {} };
+
+exports.arch = function () { return 'javascript' };
+
+exports.platform = function () { return 'browser' };
+
+exports.tmpdir = exports.tmpDir = function () {
+    return '/tmp';
+};
+
+exports.EOL = '\n';
+
+},{}],22:[function(_dereq_,module,exports){
+'use strict';
+module.exports = function (source, target, events) {
+  source.on('newListener', function (event, listener) {
+    if (~events.indexOf(event)) {
+      target.on(event, listener);
+    }
+  });
+  source.on('removeListener', function (event, listener) {
+    if (~events.indexOf(event)) {
+      target.removeListener(event, listener);
+    }
+  });
+};
+
+},{}],23:[function(_dereq_,module,exports){
+'use strict';
+var Writable = _dereq_(25);
+var Readable = _dereq_(24);
+
+exports.createReadStream = function (opts) {
+  opts = opts || {};
+  return new Readable(this, opts);
+};
+exports.createWriteStream = function (opts) {
+  opts = opts || {};
+  return new Writable(this, opts);
+};
+var ep = _dereq_(22);
+var streamEvents = [
+  'drain',
+  'pipe',
+  'unpipe',
+  'error'
+];
+exports.write = function (chunk, encoding, callback) {
+  if (!this.__stream) {
+    this.__stream = new Writable(this);
+    ep(this, this.__stream, streamEvents);
+    this.on('destroy', function () {
+      this.__stream.end();
+    });
+  }
+  return this.__stream.write(chunk, encoding, callback);
+};
+exports.end = function () {
+  this.emit('done');
+};
+
+},{"22":22,"24":24,"25":25}],24:[function(_dereq_,module,exports){
+'use strict';
+var inherits = _dereq_(14);
+var Readable = _dereq_(34).Readable;
+
+module.exports = ReadStream;
+inherits(ReadStream, Readable);
+
+function ReadStream(db, opts) {
+  if (!(this instanceof ReadStream)) {
+    return new ReadStream(db, opts);
+  }
+  Readable.call(this, {
+    objectMode: true
+  });
+  opts = opts || {};
+  var thisOpts = this.opts = {
+    since: 0
+  };
+  Object.keys(opts).forEach(function (key) {
+    thisOpts[key] = opts[key];
+  });
+  this.opts.returnDocs = false;
+  this.last = opts.since;
+  this.db = db;
+  this.changes = void 0;
+  this.canceled = false;
+}
+ReadStream.prototype._read = function () {
+  if (this.changes) {
+    return;
+  }
+  var self = this;
+  this.opts.since = this.last;
+  this.changes = this.db.changes(this.opts).on('complete', function (resp) {
+    self.cancel = function () {};
+    if (!resp.canceled) {
+      self.push(null);
+    }
+  });
+  this.changes.on('change', function (change) {
+    self.last = change.seq;
+    var more = self.push(change);
+    if (!more) {
+      self.changes.cancel();
+    }
+  });
+};
+ReadStream.prototype.cancel = function () {
+  this.canceled = true;
+  if (this.changes && typeof this.changes.cancel === 'function') {
+    return this.changes.cancel();
+  }
+};
+
+},{"14":14,"34":34}],25:[function(_dereq_,module,exports){
+(function (Buffer){
+'use strict';
+var inherits = _dereq_(14);
+var Writable = _dereq_(34).Writable;
+
+module.exports = WriteStream;
+inherits(WriteStream, Writable);
+
+function WriteStream(db, opts) {
+  if (!(this instanceof WriteStream)) {
+    return new WriteStream(db);
+  }
+  Writable.call(this, {
+    objectMode: true
+  });
+  this.db = db;
+  this.opts = opts || {};
+}
+
+WriteStream.prototype._write = function (chunk, _, next) {
+  if (Buffer.isBuffer(chunk)) {
+    chunk = chunk.toString();
+  }
+  if (typeof chunk === 'string') {
+    try {
+      chunk = JSON.parse(chunk);
+    } catch (e) {
+      return next(e);
+    }
+  }
+  if (Array.isArray(chunk)) {
+    this.db.bulkDocs({docs: chunk}, this.opts).then(function () {
+      next();
+    }, next);
+  } else if ('_id' in chunk) {
+    this.db.put(chunk, this.opts).then(function () {
+      next();
+    }, next);
+  } else {
+    this.db.post(chunk, this.opts).then(function () {
+      next();
+    }, next);
+  }
+};
+
+}).call(this,{"isBuffer":_dereq_(15)})
+},{"14":14,"15":15,"34":34}],26:[function(_dereq_,module,exports){
+'use strict';
+
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var lie = _interopDefault(_dereq_(17));
+
+/* istanbul ignore next */
+var PouchPromise = typeof Promise === 'function' ? Promise : lie;
+
+module.exports = PouchPromise;
+},{"17":17}],27:[function(_dereq_,module,exports){
 (function (process){
 'use strict';
 
@@ -3871,7 +3845,6 @@ function nextTick(fn, arg1, arg2, arg3) {
 }).call(this,_dereq_(28))
 },{"28":28}],28:[function(_dereq_,module,exports){
 // shim for using process in browser
-
 var process = module.exports = {};
 
 // cached from whatever global is present so that test runners that stub it
@@ -3883,21 +3856,63 @@ var cachedSetTimeout;
 var cachedClearTimeout;
 
 (function () {
-  try {
-    cachedSetTimeout = setTimeout;
-  } catch (e) {
-    cachedSetTimeout = function () {
-      throw new Error('setTimeout is not defined');
+    try {
+        cachedSetTimeout = setTimeout;
+    } catch (e) {
+        cachedSetTimeout = function () {
+            throw new Error('setTimeout is not defined');
+        }
     }
-  }
-  try {
-    cachedClearTimeout = clearTimeout;
-  } catch (e) {
-    cachedClearTimeout = function () {
-      throw new Error('clearTimeout is not defined');
+    try {
+        cachedClearTimeout = clearTimeout;
+    } catch (e) {
+        cachedClearTimeout = function () {
+            throw new Error('clearTimeout is not defined');
+        }
     }
-  }
 } ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
 var queue = [];
 var draining = false;
 var currentQueue;
@@ -3922,7 +3937,7 @@ function drainQueue() {
     if (draining) {
         return;
     }
-    var timeout = cachedSetTimeout.call(null, cleanUpNextTick);
+    var timeout = runTimeout(cleanUpNextTick);
     draining = true;
 
     var len = queue.length;
@@ -3939,7 +3954,7 @@ function drainQueue() {
     }
     currentQueue = null;
     draining = false;
-    cachedClearTimeout.call(null, timeout);
+    runClearTimeout(timeout);
 }
 
 process.nextTick = function (fun) {
@@ -3951,7 +3966,7 @@ process.nextTick = function (fun) {
     }
     queue.push(new Item(fun, args));
     if (queue.length === 1 && !draining) {
-        cachedSetTimeout.call(null, drainQueue, 0);
+        runTimeout(drainQueue);
     }
 };
 
@@ -4248,7 +4263,7 @@ function ReadableState(options, stream) {
   this.encoding = null;
   if (options.encoding) {
     if (!StringDecoder)
-      StringDecoder = _dereq_(50).StringDecoder;
+      StringDecoder = _dereq_(51).StringDecoder;
     this.decoder = new StringDecoder(options.encoding);
     this.encoding = options.encoding;
   }
@@ -4349,7 +4364,7 @@ function needMoreData(state) {
 // backwards compatibility.
 Readable.prototype.setEncoding = function(enc) {
   if (!StringDecoder)
-    StringDecoder = _dereq_(50).StringDecoder;
+    StringDecoder = _dereq_(51).StringDecoder;
   this._readableState.decoder = new StringDecoder(enc);
   this._readableState.encoding = enc;
 };
@@ -5117,7 +5132,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,_dereq_(28))
-},{"10":10,"11":11,"14":14,"16":16,"28":28,"38":38,"50":50,"8":8}],32:[function(_dereq_,module,exports){
+},{"10":10,"11":11,"14":14,"16":16,"28":28,"38":38,"51":51,"8":8}],32:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -5823,8 +5838,8 @@ function split(matcher, mapper, options) {
 module.exports = split
 
 },{"37":37}],37:[function(_dereq_,module,exports){
-arguments[4][18][0].apply(exports,arguments)
-},{"18":18,"28":28,"35":35,"60":60,"61":61}],38:[function(_dereq_,module,exports){
+arguments[4][20][0].apply(exports,arguments)
+},{"20":20,"28":28,"35":35,"61":61,"62":62}],38:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -5852,11 +5867,11 @@ var EE = _dereq_(11).EventEmitter;
 var inherits = _dereq_(14);
 
 inherits(Stream, EE);
-Stream.Readable = _dereq_(47);
-Stream.Writable = _dereq_(49);
+Stream.Readable = _dereq_(48);
+Stream.Writable = _dereq_(50);
 Stream.Duplex = _dereq_(40);
-Stream.Transform = _dereq_(48);
-Stream.PassThrough = _dereq_(46);
+Stream.Transform = _dereq_(49);
+Stream.PassThrough = _dereq_(47);
 
 // Backwards-compat with node 0.4.x
 Stream.Stream = Stream;
@@ -5953,7 +5968,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"11":11,"14":14,"40":40,"46":46,"47":47,"48":48,"49":49}],39:[function(_dereq_,module,exports){
+},{"11":11,"14":14,"40":40,"47":47,"48":48,"49":49,"50":50}],39:[function(_dereq_,module,exports){
 arguments[4][9][0].apply(exports,arguments)
 },{"9":9}],40:[function(_dereq_,module,exports){
 module.exports = _dereq_(41)
@@ -6116,21 +6131,21 @@ if (debugUtil && debugUtil.debuglog) {
 }
 /*</replacement>*/
 
+var BufferList = _dereq_(46);
 var StringDecoder;
 
 util.inherits(Readable, Stream);
 
-var hasPrependListener = typeof EE.prototype.prependListener === 'function';
-
 function prependListener(emitter, event, fn) {
-  if (hasPrependListener) return emitter.prependListener(event, fn);
-
-  // This is a brutally ugly hack to make sure that our error handler
-  // is attached before any userland ones.  NEVER DO THIS. This is here
-  // only because this code needs to continue to work with older versions
-  // of Node.js that do not include the prependListener() method. The goal
-  // is to eventually remove this hack.
-  if (!emitter._events || !emitter._events[event]) emitter.on(event, fn);else if (isArray(emitter._events[event])) emitter._events[event].unshift(fn);else emitter._events[event] = [fn, emitter._events[event]];
+  if (typeof emitter.prependListener === 'function') {
+    return emitter.prependListener(event, fn);
+  } else {
+    // This is a hack to make sure that our error handler is attached before any
+    // userland ones.  NEVER DO THIS. This is here only because this code needs
+    // to continue to work with older versions of Node.js that do not include
+    // the prependListener() method. The goal is to eventually remove this hack.
+    if (!emitter._events || !emitter._events[event]) emitter.on(event, fn);else if (isArray(emitter._events[event])) emitter._events[event].unshift(fn);else emitter._events[event] = [fn, emitter._events[event]];
+  }
 }
 
 var Duplex;
@@ -6154,7 +6169,10 @@ function ReadableState(options, stream) {
   // cast to ints.
   this.highWaterMark = ~ ~this.highWaterMark;
 
-  this.buffer = [];
+  // A linked list is used to store data chunks instead of an array because the
+  // linked list can remove elements from the beginning faster than
+  // array.shift()
+  this.buffer = new BufferList();
   this.length = 0;
   this.pipes = null;
   this.pipesCount = 0;
@@ -6194,7 +6212,7 @@ function ReadableState(options, stream) {
   this.decoder = null;
   this.encoding = null;
   if (options.encoding) {
-    if (!StringDecoder) StringDecoder = _dereq_(50).StringDecoder;
+    if (!StringDecoder) StringDecoder = _dereq_(51).StringDecoder;
     this.decoder = new StringDecoder(options.encoding);
     this.encoding = options.encoding;
   }
@@ -6305,7 +6323,7 @@ function needMoreData(state) {
 
 // backwards compatibility.
 Readable.prototype.setEncoding = function (enc) {
-  if (!StringDecoder) StringDecoder = _dereq_(50).StringDecoder;
+  if (!StringDecoder) StringDecoder = _dereq_(51).StringDecoder;
   this._readableState.decoder = new StringDecoder(enc);
   this._readableState.encoding = enc;
   return this;
@@ -6317,7 +6335,8 @@ function computeNewHighWaterMark(n) {
   if (n >= MAX_HWM) {
     n = MAX_HWM;
   } else {
-    // Get the next highest power of 2
+    // Get the next highest power of 2 to prevent increasing hwm excessively in
+    // tiny amounts
     n--;
     n |= n >>> 1;
     n |= n >>> 2;
@@ -6329,44 +6348,34 @@ function computeNewHighWaterMark(n) {
   return n;
 }
 
+// This function is designed to be inlinable, so please take care when making
+// changes to the function body.
 function howMuchToRead(n, state) {
-  if (state.length === 0 && state.ended) return 0;
-
-  if (state.objectMode) return n === 0 ? 0 : 1;
-
-  if (n === null || isNaN(n)) {
-    // only flow one buffer at a time
-    if (state.flowing && state.buffer.length) return state.buffer[0].length;else return state.length;
+  if (n <= 0 || state.length === 0 && state.ended) return 0;
+  if (state.objectMode) return 1;
+  if (n !== n) {
+    // Only flow one buffer at a time
+    if (state.flowing && state.length) return state.buffer.head.data.length;else return state.length;
   }
-
-  if (n <= 0) return 0;
-
-  // If we're asking for more than the target buffer level,
-  // then raise the water mark.  Bump up to the next highest
-  // power of 2, to prevent increasing it excessively in tiny
-  // amounts.
+  // If we're asking for more than the current hwm, then raise the hwm.
   if (n > state.highWaterMark) state.highWaterMark = computeNewHighWaterMark(n);
-
-  // don't have that much.  return null, unless we've ended.
-  if (n > state.length) {
-    if (!state.ended) {
-      state.needReadable = true;
-      return 0;
-    } else {
-      return state.length;
-    }
+  if (n <= state.length) return n;
+  // Don't have enough
+  if (!state.ended) {
+    state.needReadable = true;
+    return 0;
   }
-
-  return n;
+  return state.length;
 }
 
 // you can override either this method, or the async _read(n) below.
 Readable.prototype.read = function (n) {
   debug('read', n);
+  n = parseInt(n, 10);
   var state = this._readableState;
   var nOrig = n;
 
-  if (typeof n !== 'number' || n > 0) state.emittedReadable = false;
+  if (n !== 0) state.emittedReadable = false;
 
   // if we're doing read(0) to trigger a readable event, but we
   // already have a bunch of data in the buffer, then just trigger
@@ -6422,9 +6431,7 @@ Readable.prototype.read = function (n) {
   if (state.ended || state.reading) {
     doRead = false;
     debug('reading or ended', doRead);
-  }
-
-  if (doRead) {
+  } else if (doRead) {
     debug('do read');
     state.reading = true;
     state.sync = true;
@@ -6433,11 +6440,10 @@ Readable.prototype.read = function (n) {
     // call internal read method
     this._read(state.highWaterMark);
     state.sync = false;
+    // If _read pushed data synchronously, then `reading` will be false,
+    // and we need to re-evaluate how much data we can return to the user.
+    if (!state.reading) n = howMuchToRead(nOrig, state);
   }
-
-  // If _read pushed data synchronously, then `reading` will be false,
-  // and we need to re-evaluate how much data we can return to the user.
-  if (doRead && !state.reading) n = howMuchToRead(nOrig, state);
 
   var ret;
   if (n > 0) ret = fromList(n, state);else ret = null;
@@ -6445,16 +6451,18 @@ Readable.prototype.read = function (n) {
   if (ret === null) {
     state.needReadable = true;
     n = 0;
+  } else {
+    state.length -= n;
   }
 
-  state.length -= n;
+  if (state.length === 0) {
+    // If we have nothing in the buffer, then we want to know
+    // as soon as we *do* get something into the buffer.
+    if (!state.ended) state.needReadable = true;
 
-  // If we have nothing in the buffer, then we want to know
-  // as soon as we *do* get something into the buffer.
-  if (state.length === 0 && !state.ended) state.needReadable = true;
-
-  // If we tried to read() past the EOF, then emit end on the next tick.
-  if (nOrig !== n && state.ended && state.length === 0) endReadable(this);
+    // If we tried to read() past the EOF, then emit end on the next tick.
+    if (nOrig !== n && state.ended) endReadable(this);
+  }
 
   if (ret !== null) this.emit('data', ret);
 
@@ -6602,11 +6610,17 @@ Readable.prototype.pipe = function (dest, pipeOpts) {
     if (state.awaitDrain && (!dest._writableState || dest._writableState.needDrain)) ondrain();
   }
 
+  // If the user pushes more data while we're writing to dest then we'll end up
+  // in ondata again. However, we only want to increase awaitDrain once because
+  // dest will only emit one 'drain' event for the multiple writes.
+  // => Introduce a guard on increasing awaitDrain.
+  var increasedAwaitDrain = false;
   src.on('data', ondata);
   function ondata(chunk) {
     debug('ondata');
+    increasedAwaitDrain = false;
     var ret = dest.write(chunk);
-    if (false === ret) {
+    if (false === ret && !increasedAwaitDrain) {
       // If the user unpiped during `dest.write()`, it is possible
       // to get stuck in a permanently paused state if that write
       // also returned false.
@@ -6614,6 +6628,7 @@ Readable.prototype.pipe = function (dest, pipeOpts) {
       if ((state.pipesCount === 1 && state.pipes === dest || state.pipesCount > 1 && indexOf(state.pipes, dest) !== -1) && !cleanedUp) {
         debug('false write response, pause', src._readableState.awaitDrain);
         src._readableState.awaitDrain++;
+        increasedAwaitDrain = true;
       }
       src.pause();
     }
@@ -6727,18 +6742,14 @@ Readable.prototype.unpipe = function (dest) {
 Readable.prototype.on = function (ev, fn) {
   var res = Stream.prototype.on.call(this, ev, fn);
 
-  // If listening to data, and it has not explicitly been paused,
-  // then call resume to start the flow of data on the next tick.
-  if (ev === 'data' && false !== this._readableState.flowing) {
-    this.resume();
-  }
-
-  if (ev === 'readable' && !this._readableState.endEmitted) {
+  if (ev === 'data') {
+    // Start flowing on next tick if stream isn't explicitly paused
+    if (this._readableState.flowing !== false) this.resume();
+  } else if (ev === 'readable') {
     var state = this._readableState;
-    if (!state.readableListening) {
-      state.readableListening = true;
+    if (!state.endEmitted && !state.readableListening) {
+      state.readableListening = state.needReadable = true;
       state.emittedReadable = false;
-      state.needReadable = true;
       if (!state.reading) {
         processNextTick(nReadingNextTick, this);
       } else if (state.length) {
@@ -6782,6 +6793,7 @@ function resume_(stream, state) {
   }
 
   state.resumeScheduled = false;
+  state.awaitDrain = 0;
   stream.emit('resume');
   flow(stream);
   if (state.flowing && !state.reading) stream.read(0);
@@ -6800,11 +6812,7 @@ Readable.prototype.pause = function () {
 function flow(stream) {
   var state = stream._readableState;
   debug('flow', state.flowing);
-  if (state.flowing) {
-    do {
-      var chunk = stream.read();
-    } while (null !== chunk && state.flowing);
-  }
+  while (state.flowing && stream.read() !== null) {}
 }
 
 // wrap an old-style stream as the async data source.
@@ -6875,50 +6883,101 @@ Readable._fromList = fromList;
 
 // Pluck off n bytes from an array of buffers.
 // Length is the combined lengths of all the buffers in the list.
+// This function is designed to be inlinable, so please take care when making
+// changes to the function body.
 function fromList(n, state) {
-  var list = state.buffer;
-  var length = state.length;
-  var stringMode = !!state.decoder;
-  var objectMode = !!state.objectMode;
+  // nothing buffered
+  if (state.length === 0) return null;
+
   var ret;
-
-  // nothing in the list, definitely empty.
-  if (list.length === 0) return null;
-
-  if (length === 0) ret = null;else if (objectMode) ret = list.shift();else if (!n || n >= length) {
-    // read it all, truncate the array.
-    if (stringMode) ret = list.join('');else if (list.length === 1) ret = list[0];else ret = Buffer.concat(list, length);
-    list.length = 0;
+  if (state.objectMode) ret = state.buffer.shift();else if (!n || n >= state.length) {
+    // read it all, truncate the list
+    if (state.decoder) ret = state.buffer.join('');else if (state.buffer.length === 1) ret = state.buffer.head.data;else ret = state.buffer.concat(state.length);
+    state.buffer.clear();
   } else {
-    // read just some of it.
-    if (n < list[0].length) {
-      // just take a part of the first list item.
-      // slice is the same for buffers and strings.
-      var buf = list[0];
-      ret = buf.slice(0, n);
-      list[0] = buf.slice(n);
-    } else if (n === list[0].length) {
-      // first list is a perfect match
-      ret = list.shift();
-    } else {
-      // complex case.
-      // we have enough to cover it, but it spans past the first buffer.
-      if (stringMode) ret = '';else ret = bufferShim.allocUnsafe(n);
-
-      var c = 0;
-      for (var i = 0, l = list.length; i < l && c < n; i++) {
-        var _buf = list[0];
-        var cpy = Math.min(n - c, _buf.length);
-
-        if (stringMode) ret += _buf.slice(0, cpy);else _buf.copy(ret, c, 0, cpy);
-
-        if (cpy < _buf.length) list[0] = _buf.slice(cpy);else list.shift();
-
-        c += cpy;
-      }
-    }
+    // read part of list
+    ret = fromListPartial(n, state.buffer, state.decoder);
   }
 
+  return ret;
+}
+
+// Extracts only enough buffered data to satisfy the amount requested.
+// This function is designed to be inlinable, so please take care when making
+// changes to the function body.
+function fromListPartial(n, list, hasStrings) {
+  var ret;
+  if (n < list.head.data.length) {
+    // slice is the same for buffers and strings
+    ret = list.head.data.slice(0, n);
+    list.head.data = list.head.data.slice(n);
+  } else if (n === list.head.data.length) {
+    // first chunk is a perfect match
+    ret = list.shift();
+  } else {
+    // result spans more than one buffer
+    ret = hasStrings ? copyFromBufferString(n, list) : copyFromBuffer(n, list);
+  }
+  return ret;
+}
+
+// Copies a specified amount of characters from the list of buffered data
+// chunks.
+// This function is designed to be inlinable, so please take care when making
+// changes to the function body.
+function copyFromBufferString(n, list) {
+  var p = list.head;
+  var c = 1;
+  var ret = p.data;
+  n -= ret.length;
+  while (p = p.next) {
+    var str = p.data;
+    var nb = n > str.length ? str.length : n;
+    if (nb === str.length) ret += str;else ret += str.slice(0, n);
+    n -= nb;
+    if (n === 0) {
+      if (nb === str.length) {
+        ++c;
+        if (p.next) list.head = p.next;else list.head = list.tail = null;
+      } else {
+        list.head = p;
+        p.data = str.slice(nb);
+      }
+      break;
+    }
+    ++c;
+  }
+  list.length -= c;
+  return ret;
+}
+
+// Copies a specified amount of bytes from the list of buffered data chunks.
+// This function is designed to be inlinable, so please take care when making
+// changes to the function body.
+function copyFromBuffer(n, list) {
+  var ret = bufferShim.allocUnsafe(n);
+  var p = list.head;
+  var c = 1;
+  p.data.copy(ret);
+  n -= p.data.length;
+  while (p = p.next) {
+    var buf = p.data;
+    var nb = n > buf.length ? buf.length : n;
+    buf.copy(ret, ret.length - n, 0, nb);
+    n -= nb;
+    if (n === 0) {
+      if (nb === buf.length) {
+        ++c;
+        if (p.next) list.head = p.next;else list.head = list.tail = null;
+      } else {
+        list.head = p;
+        p.data = buf.slice(nb);
+      }
+      break;
+    }
+    ++c;
+  }
+  list.length -= c;
   return ret;
 }
 
@@ -6957,7 +7016,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,_dereq_(28))
-},{"10":10,"11":11,"14":14,"27":27,"28":28,"39":39,"41":41,"50":50,"6":6,"7":7,"8":8}],44:[function(_dereq_,module,exports){
+},{"10":10,"11":11,"14":14,"27":27,"28":28,"39":39,"41":41,"46":46,"51":51,"6":6,"7":7,"8":8}],44:[function(_dereq_,module,exports){
 // a transform stream is a readable/writable stream where you do
 // something with the data.  Sometimes it's called a "filter",
 // but that's not a great name for it, since that implies a thing where
@@ -7165,7 +7224,7 @@ util.inherits = _dereq_(14);
 
 /*<replacement>*/
 var internalUtil = {
-  deprecate: _dereq_(58)
+  deprecate: _dereq_(59)
 };
 /*</replacement>*/
 
@@ -7667,10 +7726,75 @@ function CorkedRequest(state) {
   };
 }
 }).call(this,_dereq_(28))
-},{"10":10,"11":11,"14":14,"27":27,"28":28,"41":41,"58":58,"7":7,"8":8}],46:[function(_dereq_,module,exports){
+},{"10":10,"11":11,"14":14,"27":27,"28":28,"41":41,"59":59,"7":7,"8":8}],46:[function(_dereq_,module,exports){
+'use strict';
+
+var Buffer = _dereq_(8).Buffer;
+/*<replacement>*/
+var bufferShim = _dereq_(7);
+/*</replacement>*/
+
+module.exports = BufferList;
+
+function BufferList() {
+  this.head = null;
+  this.tail = null;
+  this.length = 0;
+}
+
+BufferList.prototype.push = function (v) {
+  var entry = { data: v, next: null };
+  if (this.length > 0) this.tail.next = entry;else this.head = entry;
+  this.tail = entry;
+  ++this.length;
+};
+
+BufferList.prototype.unshift = function (v) {
+  var entry = { data: v, next: this.head };
+  if (this.length === 0) this.tail = entry;
+  this.head = entry;
+  ++this.length;
+};
+
+BufferList.prototype.shift = function () {
+  if (this.length === 0) return;
+  var ret = this.head.data;
+  if (this.length === 1) this.head = this.tail = null;else this.head = this.head.next;
+  --this.length;
+  return ret;
+};
+
+BufferList.prototype.clear = function () {
+  this.head = this.tail = null;
+  this.length = 0;
+};
+
+BufferList.prototype.join = function (s) {
+  if (this.length === 0) return '';
+  var p = this.head;
+  var ret = '' + p.data;
+  while (p = p.next) {
+    ret += s + p.data;
+  }return ret;
+};
+
+BufferList.prototype.concat = function (n) {
+  if (this.length === 0) return bufferShim.alloc(0);
+  if (this.length === 1) return this.head.data;
+  var ret = bufferShim.allocUnsafe(n >>> 0);
+  var p = this.head;
+  var i = 0;
+  while (p) {
+    p.data.copy(ret, i);
+    i += p.data.length;
+    p = p.next;
+  }
+  return ret;
+};
+},{"7":7,"8":8}],47:[function(_dereq_,module,exports){
 module.exports = _dereq_(42)
 
-},{"42":42}],47:[function(_dereq_,module,exports){
+},{"42":42}],48:[function(_dereq_,module,exports){
 (function (process){
 var Stream = (function (){
   try {
@@ -7690,12 +7814,12 @@ if (!process.browser && process.env.READABLE_STREAM === 'disable' && Stream) {
 }
 
 }).call(this,_dereq_(28))
-},{"28":28,"41":41,"42":42,"43":43,"44":44,"45":45}],48:[function(_dereq_,module,exports){
+},{"28":28,"41":41,"42":42,"43":43,"44":44,"45":45}],49:[function(_dereq_,module,exports){
 arguments[4][35][0].apply(exports,arguments)
-},{"35":35,"44":44}],49:[function(_dereq_,module,exports){
+},{"35":35,"44":44}],50:[function(_dereq_,module,exports){
 module.exports = _dereq_(45)
 
-},{"45":45}],50:[function(_dereq_,module,exports){
+},{"45":45}],51:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7918,11 +8042,11 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"8":8}],51:[function(_dereq_,module,exports){
+},{"8":8}],52:[function(_dereq_,module,exports){
 arguments[4][9][0].apply(exports,arguments)
-},{"9":9}],52:[function(_dereq_,module,exports){
+},{"9":9}],53:[function(_dereq_,module,exports){
 arguments[4][41][0].apply(exports,arguments)
-},{"10":10,"14":14,"27":27,"41":41,"53":53,"55":55}],53:[function(_dereq_,module,exports){
+},{"10":10,"14":14,"27":27,"41":41,"54":54,"56":56}],54:[function(_dereq_,module,exports){
 (function (process){
 'use strict';
 
@@ -7933,7 +8057,7 @@ var processNextTick = _dereq_(27);
 /*</replacement>*/
 
 /*<replacement>*/
-var isArray = _dereq_(51);
+var isArray = _dereq_(52);
 /*</replacement>*/
 
 /*<replacement>*/
@@ -7984,7 +8108,7 @@ util.inherits(Readable, Stream);
 
 var Duplex;
 function ReadableState(options, stream) {
-  Duplex = Duplex || _dereq_(52);
+  Duplex = Duplex || _dereq_(53);
 
   options = options || {};
 
@@ -8043,7 +8167,7 @@ function ReadableState(options, stream) {
   this.decoder = null;
   this.encoding = null;
   if (options.encoding) {
-    if (!StringDecoder) StringDecoder = _dereq_(50).StringDecoder;
+    if (!StringDecoder) StringDecoder = _dereq_(51).StringDecoder;
     this.decoder = new StringDecoder(options.encoding);
     this.encoding = options.encoding;
   }
@@ -8051,7 +8175,7 @@ function ReadableState(options, stream) {
 
 var Duplex;
 function Readable(options) {
-  Duplex = Duplex || _dereq_(52);
+  Duplex = Duplex || _dereq_(53);
 
   if (!(this instanceof Readable)) return new Readable(options);
 
@@ -8154,7 +8278,7 @@ function needMoreData(state) {
 
 // backwards compatibility.
 Readable.prototype.setEncoding = function (enc) {
-  if (!StringDecoder) StringDecoder = _dereq_(50).StringDecoder;
+  if (!StringDecoder) StringDecoder = _dereq_(51).StringDecoder;
   this._readableState.decoder = new StringDecoder(enc);
   this._readableState.encoding = enc;
   return this;
@@ -8805,7 +8929,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,_dereq_(28))
-},{"10":10,"11":11,"14":14,"27":27,"28":28,"50":50,"51":51,"52":52,"6":6,"8":8}],54:[function(_dereq_,module,exports){
+},{"10":10,"11":11,"14":14,"27":27,"28":28,"51":51,"52":52,"53":53,"6":6,"8":8}],55:[function(_dereq_,module,exports){
 // a transform stream is a readable/writable stream where you do
 // something with the data.  Sometimes it's called a "filter",
 // but that's not a great name for it, since that implies a thing where
@@ -8852,7 +8976,7 @@ function indexOf(xs, x) {
 
 module.exports = Transform;
 
-var Duplex = _dereq_(52);
+var Duplex = _dereq_(53);
 
 /*<replacement>*/
 var util = _dereq_(10);
@@ -8986,7 +9110,7 @@ function done(stream, er) {
 
   return stream.push(null);
 }
-},{"10":10,"14":14,"52":52}],55:[function(_dereq_,module,exports){
+},{"10":10,"14":14,"53":53}],56:[function(_dereq_,module,exports){
 (function (process){
 // A bit simpler than readable streams.
 // Implement an async ._write(chunk, encoding, cb), and it'll handle all
@@ -9017,7 +9141,7 @@ util.inherits = _dereq_(14);
 
 /*<replacement>*/
 var internalUtil = {
-  deprecate: _dereq_(58)
+  deprecate: _dereq_(59)
 };
 /*</replacement>*/
 
@@ -9047,7 +9171,7 @@ function WriteReq(chunk, encoding, cb) {
 
 var Duplex;
 function WritableState(options, stream) {
-  Duplex = Duplex || _dereq_(52);
+  Duplex = Duplex || _dereq_(53);
 
   options = options || {};
 
@@ -9164,7 +9288,7 @@ WritableState.prototype.getBuffer = function writableStateGetBuffer() {
 
 var Duplex;
 function Writable(options) {
-  Duplex = Duplex || _dereq_(52);
+  Duplex = Duplex || _dereq_(53);
 
   // Writable ctor is applied to Duplexes, though they're not
   // instanceof Writable, they're instanceof Readable.
@@ -9505,11 +9629,11 @@ function CorkedRequest(state) {
   };
 }
 }).call(this,_dereq_(28))
-},{"10":10,"11":11,"14":14,"27":27,"28":28,"52":52,"58":58,"8":8}],56:[function(_dereq_,module,exports){
+},{"10":10,"11":11,"14":14,"27":27,"28":28,"53":53,"59":59,"8":8}],57:[function(_dereq_,module,exports){
 arguments[4][35][0].apply(exports,arguments)
-},{"35":35,"54":54}],57:[function(_dereq_,module,exports){
-arguments[4][18][0].apply(exports,arguments)
-},{"18":18,"28":28,"56":56,"60":60,"61":61}],58:[function(_dereq_,module,exports){
+},{"35":35,"55":55}],58:[function(_dereq_,module,exports){
+arguments[4][20][0].apply(exports,arguments)
+},{"20":20,"28":28,"57":57,"61":61,"62":62}],59:[function(_dereq_,module,exports){
 (function (global){
 
 /**
@@ -9580,14 +9704,14 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],59:[function(_dereq_,module,exports){
+},{}],60:[function(_dereq_,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],60:[function(_dereq_,module,exports){
+},{}],61:[function(_dereq_,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10114,7 +10238,7 @@ function isPrimitive(arg) {
 }
 exports.isPrimitive = isPrimitive;
 
-exports.isBuffer = _dereq_(59);
+exports.isBuffer = _dereq_(60);
 
 function objectToString(o) {
   return Object.prototype.toString.call(o);
@@ -10177,7 +10301,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,_dereq_(28),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"14":14,"28":28,"59":59}],61:[function(_dereq_,module,exports){
+},{"14":14,"28":28,"60":60}],62:[function(_dereq_,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -10198,10 +10322,10 @@ function extend() {
     return target
 }
 
-},{}],62:[function(_dereq_,module,exports){
+},{}],63:[function(_dereq_,module,exports){
 module.exports={
   "name": "pouchdb-replication-stream",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "description": "PouchDB/CouchDB replication as a stream",
   "main": "lib/index.js",
   "repository": {
@@ -10237,7 +10361,7 @@ module.exports={
   "dependencies": {
     "argsarray": "0.0.1",
     "inherits": "~2.0.1",
-    "ldjson-stream": "^1.2.1",
+    "ndjson": "^1.4.3",
     "lodash.pick": "^4.0.0",
     "pouchdb-promise": "^5.4.4",
     "pouch-stream": "^0.4.0",
@@ -10271,14 +10395,14 @@ module.exports={
   }
 }
 
-},{}],63:[function(_dereq_,module,exports){
+},{}],64:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_(1);
 var version = _dereq_(3);
-var ldj = _dereq_(17);
-var through = _dereq_(57).obj;
-var pick = _dereq_(19);
+var ndj = _dereq_(19);
+var through = _dereq_(58).obj;
+var pick = _dereq_(18);
 var toBufferStream = _dereq_(2);
 var DEFAULT_BATCH_SIZE = 50;
 
@@ -10296,7 +10420,7 @@ var ALLOWED_PARAMS = [
 exports.adapters = {};
 exports.adapters.writableStream = _dereq_(4);
 
-exports.plugin = _dereq_(22);
+exports.plugin = _dereq_(23);
 
 exports.plugin.dump = utils.toPromise(function (writableStream, opts, callback) {
   var self = this;
@@ -10353,8 +10477,18 @@ exports.plugin.load = utils.toPromise(function (readableStream, opts, callback) 
     batchSize = DEFAULT_BATCH_SIZE;
   }
 
+  // We need this variable in order to call the callback only once.
+  // The stream is not closed when the 'error' event is emitted.
+  var error = null;
+
   var queue = [];
-  readableStream.pipe(toBufferStream()).pipe(ldj.parse()).pipe(through(function (data, _, next) {
+  readableStream
+  .pipe(toBufferStream())
+  .pipe(ndj.parse())
+  .on('error', function (errorCatched) {
+    error = errorCatched;
+  })
+  .pipe(through(function (data, _, next) {
     if (!data.docs) {
       return next();
     }
@@ -10380,7 +10514,7 @@ exports.plugin.load = utils.toPromise(function (readableStream, opts, callback) 
   .pipe(this.createWriteStream({new_edits: false}))
   .on('error', callback)
   .on('finish', function () {
-    callback(null, {ok: true});
+    callback(error, {ok: true});
   });
 });
 
@@ -10390,5 +10524,5 @@ if (typeof window !== 'undefined' && window.PouchDB) {
   window.PouchDB.adapter('writableStream', exports.adapters.writableStream);
 }
 
-},{"1":1,"17":17,"19":19,"2":2,"22":22,"3":3,"4":4,"57":57}]},{},[63])(63)
+},{"1":1,"18":18,"19":19,"2":2,"23":23,"3":3,"4":4,"58":58}]},{},[64])(64)
 });

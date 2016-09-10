@@ -56,9 +56,9 @@ function tests(dbName, dbType) {
       next(null, null);
     });
     db = new Pouch(dbName);
-    return db.then(function () {
+    return db.info().then(function () {
       remote = new Pouch(dbName + '_remote');
-      return remote.then(function () {});
+      return remote.info().then(function () {});
     });
   });
 

@@ -101,9 +101,9 @@ module.exports = function () {
 },{"58":58,"8":8}],3:[function(_dereq_,module,exports){
 'use strict';
 
-module.exports = _dereq_(63).version;
+module.exports = _dereq_(64).version;
 
-},{"63":63}],4:[function(_dereq_,module,exports){
+},{"64":64}],4:[function(_dereq_,module,exports){
 (function (process){
 'use strict';
 
@@ -3490,8 +3490,8 @@ function serialize (opts) {
 },{"20":20,"21":21,"36":36}],20:[function(_dereq_,module,exports){
 (function (process){
 var Transform = _dereq_(35)
-  , inherits  = _dereq_(61).inherits
-  , xtend     = _dereq_(62)
+  , inherits  = _dereq_(62).inherits
+  , xtend     = _dereq_(63)
 
 function DestroyableTransform(opts) {
   Transform.call(this, opts)
@@ -3587,7 +3587,7 @@ module.exports.obj = through2(function (options, transform, flush) {
 })
 
 }).call(this,_dereq_(28))
-},{"28":28,"35":35,"61":61,"62":62}],21:[function(_dereq_,module,exports){
+},{"28":28,"35":35,"62":62,"63":63}],21:[function(_dereq_,module,exports){
 exports.endianness = function () { return 'LE' };
 
 exports.hostname = function () {
@@ -3855,25 +3855,40 @@ var process = module.exports = {};
 var cachedSetTimeout;
 var cachedClearTimeout;
 
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
 (function () {
     try {
-        cachedSetTimeout = setTimeout;
-    } catch (e) {
-        cachedSetTimeout = function () {
-            throw new Error('setTimeout is not defined');
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
         }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
     }
     try {
-        cachedClearTimeout = clearTimeout;
-    } catch (e) {
-        cachedClearTimeout = function () {
-            throw new Error('clearTimeout is not defined');
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
         }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
     }
 } ())
 function runTimeout(fun) {
     if (cachedSetTimeout === setTimeout) {
         //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
         return setTimeout(fun, 0);
     }
     try {
@@ -3894,6 +3909,11 @@ function runTimeout(fun) {
 function runClearTimeout(marker) {
     if (cachedClearTimeout === clearTimeout) {
         //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
         return clearTimeout(marker);
     }
     try {
@@ -5839,7 +5859,7 @@ module.exports = split
 
 },{"37":37}],37:[function(_dereq_,module,exports){
 arguments[4][20][0].apply(exports,arguments)
-},{"20":20,"28":28,"35":35,"61":61,"62":62}],38:[function(_dereq_,module,exports){
+},{"20":20,"28":28,"35":35,"62":62,"63":63}],38:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -9633,7 +9653,7 @@ function CorkedRequest(state) {
 arguments[4][35][0].apply(exports,arguments)
 },{"35":35,"55":55}],58:[function(_dereq_,module,exports){
 arguments[4][20][0].apply(exports,arguments)
-},{"20":20,"28":28,"57":57,"61":61,"62":62}],59:[function(_dereq_,module,exports){
+},{"20":20,"28":28,"57":57,"62":62,"63":63}],59:[function(_dereq_,module,exports){
 (function (global){
 
 /**
@@ -9705,13 +9725,15 @@ function config (name) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],60:[function(_dereq_,module,exports){
+arguments[4][14][0].apply(exports,arguments)
+},{"14":14}],61:[function(_dereq_,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],61:[function(_dereq_,module,exports){
+},{}],62:[function(_dereq_,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10238,7 +10260,7 @@ function isPrimitive(arg) {
 }
 exports.isPrimitive = isPrimitive;
 
-exports.isBuffer = _dereq_(60);
+exports.isBuffer = _dereq_(61);
 
 function objectToString(o) {
   return Object.prototype.toString.call(o);
@@ -10282,7 +10304,7 @@ exports.log = function() {
  *     prototype.
  * @param {function} superCtor Constructor function to inherit prototype from.
  */
-exports.inherits = _dereq_(14);
+exports.inherits = _dereq_(60);
 
 exports._extend = function(origin, add) {
   // Don't do anything if add isn't an object
@@ -10301,7 +10323,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,_dereq_(28),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"14":14,"28":28,"60":60}],62:[function(_dereq_,module,exports){
+},{"28":28,"60":60,"61":61}],63:[function(_dereq_,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -10322,7 +10344,7 @@ function extend() {
     return target
 }
 
-},{}],63:[function(_dereq_,module,exports){
+},{}],64:[function(_dereq_,module,exports){
 module.exports={
   "name": "pouchdb-replication-stream",
   "version": "1.2.8",
@@ -10360,11 +10382,11 @@ module.exports={
   },
   "dependencies": {
     "argsarray": "0.0.1",
-    "inherits": "~2.0.1",
-    "ndjson": "^1.4.3",
+    "inherits": "^2.0.3",
     "lodash.pick": "^4.0.0",
-    "pouchdb-promise": "^5.4.4",
+    "ndjson": "^1.4.3",
     "pouch-stream": "^0.4.0",
+    "pouchdb-promise": "^6.0.4",
     "through2": "^2.0.0"
   },
   "devDependencies": {
@@ -10384,7 +10406,7 @@ module.exports={
     "mocha": "~1.18",
     "noms": "0.0.0",
     "phantomjs": "^1.9.7-5",
-    "pouchdb-memory": "^1.0.0",
+    "pouchdb-memory": "^6.0.0",
     "random-document-stream": "0.0.0",
     "request": "^2.36.0",
     "sauce-connect-launcher": "^0.4.2",
@@ -10395,7 +10417,7 @@ module.exports={
   }
 }
 
-},{}],64:[function(_dereq_,module,exports){
+},{}],65:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_(1);
@@ -10432,7 +10454,10 @@ exports.plugin.dump = utils.toPromise(function (writableStream, opts, callback) 
 
   var PouchDB = self.constructor;
 
-  var output = new PouchDB(self._db_name, {
+  // db.name replaced db._db_name in pouch 6.0.0
+  /* istanbul ignore next */
+  var dbName = self.name || self._db_name;
+  var output = new PouchDB(dbName, {
     adapter: 'writableStream'
   });
   output.setupStream(writableStream);
@@ -10524,5 +10549,5 @@ if (typeof window !== 'undefined' && window.PouchDB) {
   window.PouchDB.adapter('writableStream', exports.adapters.writableStream);
 }
 
-},{"1":1,"18":18,"19":19,"2":2,"23":23,"3":3,"4":4,"58":58}]},{},[64])(64)
+},{"1":1,"18":18,"19":19,"2":2,"23":23,"3":3,"4":4,"58":58}]},{},[65])(65)
 });

@@ -250,18 +250,18 @@ function tests(dbName, dbType) {
       return remote
         .load('foo')
         .catch(function (err) {
-          err.should.be.a('error', 'TypeError: readableStream.pipe is not a function');
+          err.message.should.equal('readableStream.pipe is not a function');
         });
     });
 
     it('should reject the promise when the json is wrongly formatted', function () {
       var writeStream = new MemoryStream();
-      writeStream.end('foo');
+      writeStream.end('foo\nbar');
 
       return remote
         .load(writeStream)
         .catch(function (err) {
-          err.should.be.a('error', 'Error: Could not parse row foo...');
+          err.message.should.equal('Could not parse row foo...');
         });
     });
   });

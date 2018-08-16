@@ -138,8 +138,6 @@ function WritableStreamPouch(opts, callback) {
     return 'writableStream';
   };
 
-  api._remote = false;
-
   api._id = utils.toPromise(function (callback) {
     callback(null, api.instanceId);
   });
@@ -9673,15 +9671,15 @@ exports.plugin.load = utils.toPromise(function (readableStream, opts, callback) 
   }
 
   // We need this variable in order to call the callback only once.
-  // The stream is not closed when the 'error' event is emitted.
-  var error = null;
+  var alreadyCalled = false;
 
   var queue = [];
   readableStream
   .pipe(toBufferStream())
   .pipe(ndj.parse())
-  .on('error', function (errorCatched) {
-    error = errorCatched;
+  .on('error', function (error) {
+    alreadyCalled = true;
+    callback(error);
   })
   .pipe(through(function (data, _, next) {
     if (!data.docs) {
@@ -9707,9 +9705,13 @@ exports.plugin.load = utils.toPromise(function (readableStream, opts, callback) 
     next();
   }))
   .pipe(this.createWriteStream({new_edits: false}))
-  .on('error', callback)
+  .on('error', function(error) {
+    callback(error);
+  })
   .on('finish', function () {
-    callback(error, {ok: true});
+    if (!alreadyCalled) {
+      callback(null, {ok: true});
+    }
   });
 });
 

@@ -39,7 +39,8 @@
     "lodash.pick": "^4.0.0",
     "ndjson": "^1.4.3",
     "pouch-stream": "^0.4.0",
-    "pouchdb-promise": "^6.0.4",
+    "pouchdb": "^8.0.1",
+    "pouchdb-adapter-memory": "^8.0.1",
     "through2": "^2.0.0"
   },
   "devDependencies": {
@@ -59,11 +60,10 @@
     "mocha": "~1.18",
     "noms": "0.0.0",
     "phantomjs": "^1.9.7-5",
-    "pouchdb-memory": "^6.0.0",
     "random-document-stream": "0.0.0",
     "request": "^2.36.0",
     "sauce-connect-launcher": "^0.4.2",
-    "selenium-standalone": "3.0.2",
+    "selenium-standalone": "6.16.0",
     "uglify-js": "^2.4.13",
     "watchify": "^3.1.0",
     "wd": "^0.2.21"

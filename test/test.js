@@ -1,6 +1,8 @@
 'use strict';
 
-var Pouch = require('pouchdb-memory');
+var Pouch = require('pouchdb');
+// Pouch.plugin(require('pouchdb-adapter-memory'));
+
 //var Readable = require('stream').Readable;
 //var Writable = require('stream').Writable;
 
@@ -130,7 +132,7 @@ function tests(dbName, dbType) {
               lastSeq = item.seq;
             }
           });
-          lastSeq.should.equal(180);
+          lastSeq.toString().should.match(/^180/);
           done();
         }).catch(done);
       });
@@ -166,13 +168,18 @@ function tests(dbName, dbType) {
 
     it('should replicate using since/batch_size 1', function () {
       var stream = new MemoryStream();
+      
+      var since;
 
       return db.put({_id: 'testdoc1'}).then(function () {
-        return db.put({_id: 'testdoc2'});
+        return db.changes().then(function (changes) {
+          since = changes.last_seq;
+          return db.put({_id: 'testdoc2'});
+        });
       }).then(function () {
         return Promise.all([
           db.dump(stream, {
-            since: 1,
+            since: since,
             batch_size: 1
           }),
           remote.load(stream)
@@ -188,12 +195,17 @@ function tests(dbName, dbType) {
     it('should replicate using since/batch_size 2', function () {
       var stream = new MemoryStream();
 
+      var since;
+
       return db.put({_id: 'testdoc1'}).then(function () {
-        return db.put({_id: 'testdoc2'});
+        return db.changes().then(function (changes) {
+          since = changes.last_seq;
+          return db.put({_id: 'testdoc2'});
+        });
       }).then(function () {
         return Promise.all([
           db.dump(stream, {
-            since: 1,
+            since: since,
             batch_size: 100
           }),
           remote.load(stream)

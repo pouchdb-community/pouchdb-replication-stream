@@ -26,5 +26,6 @@
     "afterEach",
     "it",
     "emit"
-  ]
+  ],
+  "esnext": true
 }

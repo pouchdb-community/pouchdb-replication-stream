@@ -158,7 +158,7 @@ PouchDB.adapter('writableStream', replicationStream.adapters.writableStream);
 Stream directly without the dump file
 ---
 
-On Node.js or with [`Browserify`](http://browserify.org/), ou can use a [`MemoryStream`](https://github.com/JSBizon/node-memorystream) to stream directly without dumping to a file. Here's an example:
+On Node.js or with [`Browserify`](http://browserify.org/), you can use a [`MemoryStream`](https://github.com/JSBizon/node-memorystream) to stream directly without dumping to a file. Here's an example:
 
 ```js
 var Promise = require('bluebird');

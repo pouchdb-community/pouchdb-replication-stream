@@ -38,6 +38,7 @@
     "inherits": "^2.0.3",
     "lodash.pick": "^4.0.0",
     "ndjson": "^1.4.3",
+    "playwright": "^1.55.0",
     "pouch-stream": "^0.4.0",
     "pouchdb": "^8.0.1",
     "pouchdb-adapter-memory": "^8.0.1",

@@ -35,7 +35,6 @@
     "coverage": "npm test --coverage && istanbul check-coverage --lines 100 --function 100 --statements 100 --branches 100"
   },
   "dependencies": {
-    "argsarray": "0.0.1",
     "inherits": "^2.0.3",
     "lodash.pick": "^4.0.0",
     "ndjson": "^1.4.3",

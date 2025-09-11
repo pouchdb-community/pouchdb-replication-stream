@@ -1,7 +1,6 @@
 'use strict';
 
 var Pouch = require('pouchdb');
-// Pouch.plugin(require('pouchdb-adapter-memory'));
 
 //var Readable = require('stream').Readable;
 //var Writable = require('stream').Writable;

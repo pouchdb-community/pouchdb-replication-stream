@@ -6,3 +6,9 @@ test/test-bundle.js
 npm-debug.log
 dist
 .idea
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

@@ -21,7 +21,6 @@ var chai = require('chai');
 chai.use(require("chai-as-promised"));
 var through = require('through2').obj;
 chai.should();
-var Promise = require('bluebird');
 var MemoryStream = require('memorystream');
 
 var dbs;

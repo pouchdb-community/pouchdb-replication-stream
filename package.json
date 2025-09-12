@@ -32,7 +32,7 @@
     "min": "uglifyjs dist/pouchdb.replication-stream.js -mc > dist/pouchdb.replication-stream.min.js",
     "dev": "browserify test/test.js > test/test-bundle.js && npm run dev-server",
     "dev-server": "./bin/dev-server.js",
-    "coverage": "npm test --coverage && istanbul check-coverage --lines 100 --function 100 --statements 100 --branches 100"
+    "coverage": "nyc npm run test"
   },
   "dependencies": {
     "ndjson": "^1.4.3",
@@ -50,12 +50,12 @@
     "chai-as-promised": "^5.1.0",
     "derequire": "^2.0.0",
     "http-server": "^14.1.1",
-    "istanbul": "^0.4.5",
     "jshint": "^2.13.6",
     "memorystream": "^0.3.0",
     "mkdirp": "^3.0.1",
     "mocha": "^11.7.2",
     "noms": "0.0.0",
+    "nyc": "^17.1.0",
     "phantomjs": "^1.9.7-5",
     "random-document-stream": "0.0.0",
     "request": "^2.36.0",

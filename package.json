@@ -54,7 +54,7 @@
     "jshint": "^2.13.6",
     "memorystream": "^0.3.0",
     "mkdirp": "^3.0.1",
-    "mocha": "~1.18",
+    "mocha": "^11.7.2",
     "noms": "0.0.0",
     "phantomjs": "^1.9.7-5",
     "random-document-stream": "0.0.0",

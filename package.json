@@ -22,7 +22,7 @@
     "url": "https://github.com/nolanlawson/pouchdb-replication-stream/issues"
   },
   "scripts": {
-    "test-node": "TEST_DB=testdb,http://localhost:5984/testdb istanbul test ./node_modules/mocha/bin/_mocha test/test.js -- -R spec",
+    "test-node": "TEST_DB=testdb,http://localhost:5984/testdb ./node_modules/mocha/bin/_mocha test/test.js -- -R spec",
     "test-browser": "./bin/test-browser.js",
     "test-browser-playwright": "npx playwright test",
     "jshint": "jshint -c .jshintrc lib test/test.js",

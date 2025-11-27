@@ -161,7 +161,6 @@ Stream directly without the dump file
 On Node.js or with [`Browserify`](http://browserify.org/), ou can use a [`MemoryStream`](https://github.com/JSBizon/node-memorystream) to stream directly without dumping to a file. Here's an example:
 
 ```js
-var Promise = require('bluebird');
 var PouchDB = require('pouchdb');
 var replicationStream = require('pouchdb-replication-stream');
 var MemoryStream = require('memorystream');
@@ -303,6 +302,12 @@ Your plugin is now located at `dist/pouchdb.mypluginname.js` and `dist/pouchdb.m
 Testing
 ----
 
+### Prerequisites
+
+- Enable CORS in your CouchDB
+
+An easy way to do so is using Fauxton. Go to Config, CORS, and under `Restrict to specific domains`, add `http://127.0.0.1:8001`
+
 ### In Node
 
 This will run the tests in Node using LevelDB:
@@ -337,3 +342,8 @@ You can run e.g.
     CLIENT=selenium:phantomjs npm test
 
 This will run the tests automatically and the process will exit with a 0 or a 1 when it's done. Firefox uses IndexedDB, and PhantomJS uses WebSQL.
+
+### Automated browser tests with Playwright
+
+- Run `npm run dev-server` 
+- On another console, run `npm run test-browser-playwright`

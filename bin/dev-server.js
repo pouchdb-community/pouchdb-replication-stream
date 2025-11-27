@@ -5,7 +5,6 @@
 var COUCH_HOST = process.env.COUCH_HOST || 'http://127.0.0.1:5984';
 var HTTP_PORT = 8001;
 
-var Promise = require('bluebird');
 var request = require('request');
 var http_server = require("http-server");
 var fs = require('fs');

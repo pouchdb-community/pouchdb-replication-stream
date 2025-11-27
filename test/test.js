@@ -1,7 +1,6 @@
 'use strict';
 
 var Pouch = require('pouchdb');
-// Pouch.plugin(require('pouchdb-adapter-memory'));
 
 //var Readable = require('stream').Readable;
 //var Writable = require('stream').Writable;
@@ -22,7 +21,6 @@ var chai = require('chai');
 chai.use(require("chai-as-promised"));
 var through = require('through2').obj;
 chai.should();
-var Promise = require('bluebird');
 var MemoryStream = require('memorystream');
 
 var dbs;
